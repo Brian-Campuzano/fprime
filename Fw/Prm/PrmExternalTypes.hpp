@@ -12,7 +12,7 @@
 
 namespace Fw {
 
-    class ParamSerialization {
+    class ParamExternalDelegate {
         public:
             // TODO fix these types with Havard
             virtual SerializeStatus serializeParam(const FwPrmIdType id, ParamBuffer& buff) = 0;
