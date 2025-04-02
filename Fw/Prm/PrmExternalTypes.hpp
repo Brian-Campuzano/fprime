@@ -14,9 +14,9 @@ namespace Fw {
 
     class ParamExternalDelegate {
         public:
-            // TODO fix these types with Havard
+            // TODO Add documentation
+            virtual SerializeStatus deserializeParam(const FwPrmIdType id, ParamValid param_valid, ParamBuffer& buff) = 0;
             virtual SerializeStatus serializeParam(const FwPrmIdType id, ParamBuffer& buff) = 0;
-            virtual SerializeStatus deserializeParam(const FwPrmIdType id, ParamBuffer& buff) = 0;
         };
 
 }  // namespace Fw
