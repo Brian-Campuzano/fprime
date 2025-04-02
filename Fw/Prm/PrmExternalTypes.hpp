@@ -15,7 +15,7 @@ namespace Fw {
     class ParamExternalDelegate {
         public:
             // TODO Add documentation
-            virtual SerializeStatus deserializeParam(const FwPrmIdType id, ParamValid param_valid, ParamBuffer& buff) = 0;
+            virtual SerializeStatus deserializeParam(const FwPrmIdType id, const ParamValid prmStat, ParamBuffer& buff) = 0;
             virtual SerializeStatus serializeParam(const FwPrmIdType id, ParamBuffer& buff) = 0;
         };
 
