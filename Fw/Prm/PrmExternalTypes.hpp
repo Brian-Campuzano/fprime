@@ -8,6 +8,7 @@
 #define FW_EXTERNAL_PARAM_TYPES_HPP
 
 #include <FpConfig.hpp>
+#include <Fw/Prm/ParamValidEnumAc.hpp>
 #include "PrmBuffer.hpp"
 
 namespace Fw {
