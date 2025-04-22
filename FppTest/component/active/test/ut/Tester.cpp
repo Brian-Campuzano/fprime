@@ -25,6 +25,7 @@ Tester ::Tester()
     this->initComponents();
     this->connectPorts();
     this->connectAsyncPorts();
+    this->component.registerExternalParameters(&this->paramTesterDelegate);
 }
 
 Tester ::~Tester() {}
