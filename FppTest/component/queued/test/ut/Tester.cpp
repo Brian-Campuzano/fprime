@@ -24,6 +24,7 @@ Tester ::Tester()
     this->initComponents();
     this->connectPorts();
     this->connectAsyncPorts();
+    this->component.registerExternalParameters(&this->paramTesterDelegate);
 }
 
 Tester ::~Tester() {}
@@ -117,4 +118,99 @@ void Tester ::from_prmSetIn_handler(const FwIndexType portNum, FwPrmIdType id, F
     }
 
     this->pushFromPortEntry_prmSetIn(id, val);
+}
+
+// ----------------------------------------------------------------------
+// Unit test implementation of external parameter delegate serialization/deserialization
+// ----------------------------------------------------------------------
+
+Fw::SerializeStatus Tester::QueuedTestComponentBaseParamExternalDelegate ::
+  deserializeParam(
+      const FwPrmIdType base_id,
+      const FwPrmIdType local_id,
+      const Fw::ParamValid prmStat,
+      Fw::ParamBuffer& buff
+  )
+{
+  Fw::SerializeStatus stat;
+  (void) base_id;
+
+  // Serialize the parameter based on ID
+  switch(local_id)
+  {
+    // ParamBoolExt
+    case QueuedTestComponentBase::PARAMID_PARAMBOOLEXT:
+      stat = buff.deserialize(this->m_param_ParamBoolExt);
+      break;
+    // ParamI32Ext
+    case QueuedTestComponentBase::PARAMID_PARAMI32EXT:
+      stat = buff.deserialize(this->m_param_ParamI32Ext);
+      break;
+    // ParamStringExt
+    case QueuedTestComponentBase::PARAMID_PARAMSTRINGEXT:
+      stat = buff.deserialize(this->m_param_ParamStringExt);
+      break;
+    // ParamEnumExt
+    case QueuedTestComponentBase::PARAMID_PARAMENUMEXT:
+      stat = buff.deserialize(this->m_param_ParamEnumExt);
+      break;
+    // ParamArrayExt
+    case QueuedTestComponentBase::PARAMID_PARAMARRAYEXT:
+      stat = buff.deserialize(this->m_param_ParamArrayExt);
+      break;
+    // ParamStructExt
+    case QueuedTestComponentBase::PARAMID_PARAMSTRUCTEXT:
+      stat = buff.deserialize(this->m_param_ParamStructExt);
+      break;
+    default:
+      // Unknown ID should not have gotten here
+      FW_ASSERT(false, local_id);
+  }
+
+  return stat;
+}
+
+Fw::SerializeStatus Tester::QueuedTestComponentBaseParamExternalDelegate ::
+  serializeParam(
+      const FwPrmIdType base_id,
+      const FwPrmIdType local_id,
+      Fw::ParamBuffer& buff
+  ) const
+{
+  Fw::SerializeStatus stat;
+  (void) base_id;
+
+  // Serialize the parameter based on ID
+  switch(local_id)
+  {
+    // ParamBoolExt
+    case QueuedTestComponentBase::PARAMID_PARAMBOOLEXT:
+      stat = buff.serialize(this->m_param_ParamBoolExt);
+      break;
+    // ParamI32Ext
+    case QueuedTestComponentBase::PARAMID_PARAMI32EXT:
+      stat = buff.serialize(this->m_param_ParamI32Ext);
+      break;
+    // ParamStringExt
+    case QueuedTestComponentBase::PARAMID_PARAMSTRINGEXT:
+      stat = buff.serialize(this->m_param_ParamStringExt);
+      break;
+    // ParamEnumExt
+    case QueuedTestComponentBase::PARAMID_PARAMENUMEXT:
+      stat = buff.serialize(this->m_param_ParamEnumExt);
+      break;
+    // ParamArrayExt
+    case QueuedTestComponentBase::PARAMID_PARAMARRAYEXT:
+      stat = buff.serialize(this->m_param_ParamArrayExt);
+      break;
+    // ParamStructExt
+    case QueuedTestComponentBase::PARAMID_PARAMSTRUCTEXT:
+      stat = buff.serialize(this->m_param_ParamStructExt);
+      break;
+    default:
+      // Unknown ID should not have gotten here
+      FW_ASSERT(false, local_id);
+  }
+
+  return stat;
 }

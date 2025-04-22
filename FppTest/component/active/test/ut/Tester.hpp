@@ -59,6 +59,8 @@ class Tester : public ActiveTestGTestBase {
     void testParam();
     PARAM_CMD_TEST_DECLS
 
+    void testExternalParam();
+
     INTERNAL_INT_TEST_DECLS
 
     void testTime();
@@ -302,8 +304,91 @@ class Tester : public ActiveTestGTestBase {
     FppTest::Types::StructParam structPrm;
     Fw::ParamValid prmValid;
 
-    // Time test values
     Fw::Time time;
+
+    //! External Parameter Delegate
+    class ActiveTestComponentBaseParamExternalDelegate :
+    public Fw::ParamExternalDelegate
+    {
+
+    public:
+
+        // ----------------------------------------------------------------------
+        // Parameter validity flags
+        // ----------------------------------------------------------------------
+
+        //! True if ParamBoolExt was successfully received
+        Fw::ParamValid m_param_ParamBoolExt_valid;
+
+        //! True if ParamI32Ext was successfully received
+        Fw::ParamValid m_param_ParamI32Ext_valid;
+
+        //! True if ParamStringExt was successfully received
+        Fw::ParamValid m_param_ParamStringExt_valid;
+
+        //! True if ParamEnumExt was successfully received
+        Fw::ParamValid m_param_ParamEnumExt_valid;
+
+        //! True if ParamArrayExt was successfully received
+        Fw::ParamValid m_param_ParamArrayExt_valid;
+
+        //! True if ParamStructExt was successfully received
+        Fw::ParamValid m_param_ParamStructExt_valid;
+
+    public:
+
+        // ----------------------------------------------------------------------
+        // Parameter variables
+        // ----------------------------------------------------------------------
+
+        //! Parameter ParamBoolExt
+        bool m_param_ParamBoolExt;
+
+        //! Parameter ParamI32Ext
+        I32 m_param_ParamI32Ext;
+
+        //! Parameter ParamStringExt
+        Fw::ParamString m_param_ParamStringExt;
+
+        //! Parameter ParamEnumExt
+        FormalParamEnum m_param_ParamEnumExt;
+
+        //! Parameter ParamArrayExt
+        FormalParamArray m_param_ParamArrayExt;
+
+        //! Parameter ParamStructExt
+        FormalParamStruct m_param_ParamStructExt;
+
+    public:
+
+        // ----------------------------------------------------------------------
+        // Unit test implementation of external parameter delegate serialization/deserialization
+        // ----------------------------------------------------------------------
+
+        //! Parameter deserialization function for external parameter unit testing
+        Fw::SerializeStatus deserializeParam(
+            const FwPrmIdType base_id, //!< The component base parameter ID to deserialize
+            const FwPrmIdType local_id, //!< The parameter local ID to deserialize
+            const Fw::ParamValid prmStat, //!< The parameter validity status
+            Fw::ParamBuffer& buff //!< The buffer containing the parameter to deserialize
+        ) override;
+
+        //! Parameter serialization function for external parameter unit testing
+        Fw::SerializeStatus serializeParam(
+            const FwPrmIdType base_id, //!< The component base parameter ID to serialize
+            const FwPrmIdType local_id, //!< The parameter local ID to serialize
+            Fw::ParamBuffer& buff //!< The buffer to serialize the parameter into
+        ) const override;
+
+    };
+
+    // ----------------------------------------------------------------------
+    // Parameter delegates
+    // ----------------------------------------------------------------------
+
+    //! Delegate to serialize/deserialize an externally stored parameter
+    ActiveTestComponentBaseParamExternalDelegate paramTesterDelegate;
+
 };
 
 #endif

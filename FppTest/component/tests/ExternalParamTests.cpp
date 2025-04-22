@@ -13,10 +13,10 @@
 #include "Tester.hpp"
 
 // ----------------------------------------------------------------------
-// Parameter tests
+// External Parameter tests
 // ----------------------------------------------------------------------
 
-void Tester ::testParam() {
+void Tester ::testExternalParam() {
     ASSERT_TRUE(component.isConnected_prmGetOut_OutputPort(0));
     component.loadParameters();
 
@@ -25,7 +25,7 @@ void Tester ::testParam() {
     bool extBoolVal = component.paramGet_ParamBoolExt(valid);
     ASSERT_EQ(valid, prmValid);
     if (valid == Fw::ParamValid::VALID) {
-        ASSERT_EQ(extBoolVal, this->m_param_ParamBoolExt);
+        ASSERT_EQ(extBoolVal, this->paramTesterDelegate.m_param_ParamBoolExt);
     }
 
     // U32 u32Val = component.paramGet_ParamU32(valid);
