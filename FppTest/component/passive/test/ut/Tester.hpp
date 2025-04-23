@@ -13,6 +13,7 @@
 #include "FppTest/component/tests/CmdTests.hpp"
 #include "FppTest/component/tests/EventTests.hpp"
 #include "FppTest/component/tests/ParamTests.hpp"
+#include "FppTest/component/tests/ExternalParamTests.hpp"
 #include "FppTest/component/tests/PortTests.hpp"
 #include "FppTest/component/tests/TlmTests.hpp"
 #include "FppTest/component/types/FormalParamTypes.hpp"
@@ -56,6 +57,7 @@ class Tester : public PassiveTestGTestBase {
     PARAM_CMD_TEST_DECLS
 
     void testExternalParam();
+    EXTERNAL_PARAM_CMD_TEST_DECLS
 
     void testTime();
 

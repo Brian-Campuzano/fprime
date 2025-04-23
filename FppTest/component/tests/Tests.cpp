@@ -92,8 +92,6 @@ TEST(ComponentParameterTest, ParameterTest) {
 
     tester.setPrmValid(Fw::ParamValid::INVALID);
     tester.testParam();
-
-    tester.testExternalParam();
 }
 
 // Parameter tests
@@ -105,6 +103,25 @@ using ParamCommandTestImplementations = ::testing::Types<FppTest::Types::BoolPar
                                                          FppTest::Types::StructParam>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(FppTest, ComponentParamCommandTest, ParamCommandTestImplementations);
+
+// External Parameter tests
+TEST(ComponentExternalParameterTest, ParameterExternalTest) {
+    Tester tester;
+
+    tester.setPrmValid(Fw::ParamValid::VALID);
+    tester.testExternalParam();
+}
+
+// External Parameter tests
+using ExternalParamCommandTestImplementations = ::testing::Types<FppTest::Types::BoolParam,
+                                                                 FppTest::Types::I32Param,
+                                                                 FppTest::Types::PrmStringParam,
+                                                                 FppTest::Types::EnumParam,
+                                                                 FppTest::Types::ArrayParam,
+                                                                 FppTest::Types::StructParam>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(FppTest, ComponentExternalParamCommandTest,
+                               ExternalParamCommandTestImplementations);
 
 // Time tests
 TEST(ComponentTimeTest, TimeTest) {

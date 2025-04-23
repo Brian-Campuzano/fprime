@@ -23,6 +23,7 @@ Tester ::Tester()
       time(STest::Pick::any(), STest::Pick::any()) {
     this->initComponents();
     this->connectPorts();
+    this->component.registerExternalParameters(&this->paramTesterDelegate);
 }
 
 Tester ::~Tester() {}

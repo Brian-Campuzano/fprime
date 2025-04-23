@@ -16,10 +16,10 @@
 
 #define EXTERNAL_PARAM_CMD_TEST_DECL(TYPE) void testExternalParamCommand(FwIndexType portNum, FppTest::Types::TYPE& data);
 
-#define EXTERNAL_PARAM_CMD_TEST_DECLS            \
-    EXTERNAL_PARAM_CMD_TEST_DECL(ParamBoolExt)
-    // PARAM_CMD_TEST_DECL(U32Param)       \
-    // PARAM_CMD_TEST_DECL(PrmStringParam) \
-    // PARAM_CMD_TEST_DECL(EnumParam)      \
-    // PARAM_CMD_TEST_DECL(ArrayParam)     \
-    // PARAM_CMD_TEST_DECL(StructParam)
+#define EXTERNAL_PARAM_CMD_TEST_DECLS              \
+    EXTERNAL_PARAM_CMD_TEST_DECL(BoolParam)        \
+    EXTERNAL_PARAM_CMD_TEST_DECL(I32Param)         \
+    EXTERNAL_PARAM_CMD_TEST_DECL(PrmStringParam)   \
+    EXTERNAL_PARAM_CMD_TEST_DECL(EnumParam)        \
+    EXTERNAL_PARAM_CMD_TEST_DECL(ArrayParam)       \
+    EXTERNAL_PARAM_CMD_TEST_DECL(StructParam)
