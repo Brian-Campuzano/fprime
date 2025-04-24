@@ -182,23 +182,23 @@ class Tester : public QueuedTestGTestBase {
         // Parameter validity flags
         // ----------------------------------------------------------------------
 
-        //! True if ParamBoolExt was successfully received
-        Fw::ParamValid m_param_ParamBoolExt_valid;
+        //! True if ParamBoolExternal was successfully received
+        Fw::ParamValid m_param_ParamBoolExternal_valid;
 
-        //! True if ParamI32Ext was successfully received
-        Fw::ParamValid m_param_ParamI32Ext_valid;
+        //! True if ParamI32External was successfully received
+        Fw::ParamValid m_param_ParamI32External_valid;
 
-        //! True if ParamStringExt was successfully received
-        Fw::ParamValid m_param_ParamStringExt_valid;
+        //! True if ParamStringExternal was successfully received
+        Fw::ParamValid m_param_ParamStringExternal_valid;
 
-        //! True if ParamEnumExt was successfully received
-        Fw::ParamValid m_param_ParamEnumExt_valid;
+        //! True if ParamEnumExternal was successfully received
+        Fw::ParamValid m_param_ParamEnumExternal_valid;
 
-        //! True if ParamArrayExt was successfully received
-        Fw::ParamValid m_param_ParamArrayExt_valid;
+        //! True if ParamArrayExternal was successfully received
+        Fw::ParamValid m_param_ParamArrayExternal_valid;
 
-        //! True if ParamStructExt was successfully received
-        Fw::ParamValid m_param_ParamStructExt_valid;
+        //! True if ParamStructExternal was successfully received
+        Fw::ParamValid m_param_ParamStructExternal_valid;
 
     public:
 
@@ -206,23 +206,23 @@ class Tester : public QueuedTestGTestBase {
         // Parameter variables
         // ----------------------------------------------------------------------
 
-        //! Parameter ParamBoolExt
-        bool m_param_ParamBoolExt;
+        //! Parameter ParamBoolExternal
+        bool m_param_ParamBoolExternal;
 
-        //! Parameter ParamI32Ext
-        I32 m_param_ParamI32Ext;
+        //! Parameter ParamI32External
+        I32 m_param_ParamI32External;
 
-        //! Parameter ParamStringExt
-        Fw::ParamString m_param_ParamStringExt;
+        //! Parameter ParamStringExternal
+        Fw::ParamString m_param_ParamStringExternal;
 
-        //! Parameter ParamEnumExt
-        FormalParamEnum m_param_ParamEnumExt;
+        //! Parameter ParamEnumExternal
+        FormalParamEnum m_param_ParamEnumExternal;
 
-        //! Parameter ParamArrayExt
-        FormalParamArray m_param_ParamArrayExt;
+        //! Parameter ParamArrayExternal
+        FormalParamArray m_param_ParamArrayExternal;
 
-        //! Parameter ParamStructExt
-        FormalParamStruct m_param_ParamStructExt;
+        //! Parameter ParamStructExternal
+        FormalParamStruct m_param_ParamStructExternal;
 
     public:
 

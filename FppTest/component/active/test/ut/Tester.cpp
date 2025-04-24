@@ -140,29 +140,29 @@ Fw::SerializeStatus Tester::ActiveTestComponentBaseParamExternalDelegate ::
   // Serialize the parameter based on ID
   switch(local_id)
   {
-    // ParamBoolExt
-    case ActiveTestComponentBase::PARAMID_PARAMBOOLEXT:
-      stat = buff.deserialize(this->m_param_ParamBoolExt);
+    // ParamBoolExternal
+    case ActiveTestComponentBase::PARAMID_PARAMBOOLEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamBoolExternal);
       break;
-    // ParamI32Ext
-    case ActiveTestComponentBase::PARAMID_PARAMI32EXT:
-      stat = buff.deserialize(this->m_param_ParamI32Ext);
+    // ParamI32External
+    case ActiveTestComponentBase::PARAMID_PARAMI32EXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamI32External);
       break;
-    // ParamStringExt
-    case ActiveTestComponentBase::PARAMID_PARAMSTRINGEXT:
-      stat = buff.deserialize(this->m_param_ParamStringExt);
+    // ParamStringExternal
+    case ActiveTestComponentBase::PARAMID_PARAMSTRINGEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamStringExternal);
       break;
-    // ParamEnumExt
-    case ActiveTestComponentBase::PARAMID_PARAMENUMEXT:
-      stat = buff.deserialize(this->m_param_ParamEnumExt);
+    // ParamEnumExternal
+    case ActiveTestComponentBase::PARAMID_PARAMENUMEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamEnumExternal);
       break;
-    // ParamArrayExt
-    case ActiveTestComponentBase::PARAMID_PARAMARRAYEXT:
-      stat = buff.deserialize(this->m_param_ParamArrayExt);
+    // ParamArrayExternal
+    case ActiveTestComponentBase::PARAMID_PARAMARRAYEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamArrayExternal);
       break;
-    // ParamStructExt
-    case ActiveTestComponentBase::PARAMID_PARAMSTRUCTEXT:
-      stat = buff.deserialize(this->m_param_ParamStructExt);
+    // ParamStructExternal
+    case ActiveTestComponentBase::PARAMID_PARAMSTRUCTEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamStructExternal);
       break;
     default:
       // Unknown ID should not have gotten here
@@ -185,29 +185,29 @@ Fw::SerializeStatus Tester::ActiveTestComponentBaseParamExternalDelegate ::
   // Serialize the parameter based on ID
   switch(local_id)
   {
-    // ParamBoolExt
-    case ActiveTestComponentBase::PARAMID_PARAMBOOLEXT:
-      stat = buff.serialize(this->m_param_ParamBoolExt);
+    // ParamBoolExternal
+    case ActiveTestComponentBase::PARAMID_PARAMBOOLEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamBoolExternal);
       break;
-    // ParamI32Ext
-    case ActiveTestComponentBase::PARAMID_PARAMI32EXT:
-      stat = buff.serialize(this->m_param_ParamI32Ext);
+    // ParamI32External
+    case ActiveTestComponentBase::PARAMID_PARAMI32EXTERNAL:
+      stat = buff.serialize(this->m_param_ParamI32External);
       break;
-    // ParamStringExt
-    case ActiveTestComponentBase::PARAMID_PARAMSTRINGEXT:
-      stat = buff.serialize(this->m_param_ParamStringExt);
+    // ParamStringExternal
+    case ActiveTestComponentBase::PARAMID_PARAMSTRINGEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamStringExternal);
       break;
-    // ParamEnumExt
-    case ActiveTestComponentBase::PARAMID_PARAMENUMEXT:
-      stat = buff.serialize(this->m_param_ParamEnumExt);
+    // ParamEnumExternal
+    case ActiveTestComponentBase::PARAMID_PARAMENUMEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamEnumExternal);
       break;
-    // ParamArrayExt
-    case ActiveTestComponentBase::PARAMID_PARAMARRAYEXT:
-      stat = buff.serialize(this->m_param_ParamArrayExt);
+    // ParamArrayExternal
+    case ActiveTestComponentBase::PARAMID_PARAMARRAYEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamArrayExternal);
       break;
-    // ParamStructExt
-    case ActiveTestComponentBase::PARAMID_PARAMSTRUCTEXT:
-      stat = buff.serialize(this->m_param_ParamStructExt);
+    // ParamStructExternal
+    case ActiveTestComponentBase::PARAMID_PARAMSTRUCTEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamStructExternal);
       break;
     default:
       // Unknown ID should not have gotten here

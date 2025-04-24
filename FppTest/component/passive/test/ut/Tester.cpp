@@ -138,29 +138,29 @@ Fw::SerializeStatus Tester::PassiveTestComponentBaseParamExternalDelegate ::
   // Serialize the parameter based on ID
   switch(local_id)
   {
-    // ParamBoolExt
-    case PassiveTestComponentBase::PARAMID_PARAMBOOLEXT:
-      stat = buff.deserialize(this->m_param_ParamBoolExt);
+    // ParamBoolExternal
+    case PassiveTestComponentBase::PARAMID_PARAMBOOLEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamBoolExternal);
       break;
-    // ParamI32Ext
-    case PassiveTestComponentBase::PARAMID_PARAMI32EXT:
-      stat = buff.deserialize(this->m_param_ParamI32Ext);
+    // ParamI32External
+    case PassiveTestComponentBase::PARAMID_PARAMI32EXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamI32External);
       break;
-    // ParamStringExt
-    case PassiveTestComponentBase::PARAMID_PARAMSTRINGEXT:
-      stat = buff.deserialize(this->m_param_ParamStringExt);
+    // ParamStringExternal
+    case PassiveTestComponentBase::PARAMID_PARAMSTRINGEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamStringExternal);
       break;
-    // ParamEnumExt
-    case PassiveTestComponentBase::PARAMID_PARAMENUMEXT:
-      stat = buff.deserialize(this->m_param_ParamEnumExt);
+    // ParamEnumExternal
+    case PassiveTestComponentBase::PARAMID_PARAMENUMEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamEnumExternal);
       break;
-    // ParamArrayExt
-    case PassiveTestComponentBase::PARAMID_PARAMARRAYEXT:
-      stat = buff.deserialize(this->m_param_ParamArrayExt);
+    // ParamArrayExternal
+    case PassiveTestComponentBase::PARAMID_PARAMARRAYEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamArrayExternal);
       break;
-    // ParamStructExt
-    case PassiveTestComponentBase::PARAMID_PARAMSTRUCTEXT:
-      stat = buff.deserialize(this->m_param_ParamStructExt);
+    // ParamStructExternal
+    case PassiveTestComponentBase::PARAMID_PARAMSTRUCTEXTERNAL:
+      stat = buff.deserialize(this->m_param_ParamStructExternal);
       break;
     default:
       // Unknown ID should not have gotten here
@@ -183,29 +183,29 @@ Fw::SerializeStatus Tester::PassiveTestComponentBaseParamExternalDelegate ::
   // Serialize the parameter based on ID
   switch(local_id)
   {
-    // ParamBoolExt
-    case PassiveTestComponentBase::PARAMID_PARAMBOOLEXT:
-      stat = buff.serialize(this->m_param_ParamBoolExt);
+    // ParamBoolExternal
+    case PassiveTestComponentBase::PARAMID_PARAMBOOLEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamBoolExternal);
       break;
-    // ParamI32Ext
-    case PassiveTestComponentBase::PARAMID_PARAMI32EXT:
-      stat = buff.serialize(this->m_param_ParamI32Ext);
+    // ParamI32External
+    case PassiveTestComponentBase::PARAMID_PARAMI32EXTERNAL:
+      stat = buff.serialize(this->m_param_ParamI32External);
       break;
-    // ParamStringExt
-    case PassiveTestComponentBase::PARAMID_PARAMSTRINGEXT:
-      stat = buff.serialize(this->m_param_ParamStringExt);
+    // ParamStringExternal
+    case PassiveTestComponentBase::PARAMID_PARAMSTRINGEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamStringExternal);
       break;
-    // ParamEnumExt
-    case PassiveTestComponentBase::PARAMID_PARAMENUMEXT:
-      stat = buff.serialize(this->m_param_ParamEnumExt);
+    // ParamEnumExternal
+    case PassiveTestComponentBase::PARAMID_PARAMENUMEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamEnumExternal);
       break;
-    // ParamArrayExt
-    case PassiveTestComponentBase::PARAMID_PARAMARRAYEXT:
-      stat = buff.serialize(this->m_param_ParamArrayExt);
+    // ParamArrayExternal
+    case PassiveTestComponentBase::PARAMID_PARAMARRAYEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamArrayExternal);
       break;
-    // ParamStructExt
-    case PassiveTestComponentBase::PARAMID_PARAMSTRUCTEXT:
-      stat = buff.serialize(this->m_param_ParamStructExt);
+    // ParamStructExternal
+    case PassiveTestComponentBase::PARAMID_PARAMSTRUCTEXTERNAL:
+      stat = buff.serialize(this->m_param_ParamStructExternal);
       break;
     default:
       // Unknown ID should not have gotten here
