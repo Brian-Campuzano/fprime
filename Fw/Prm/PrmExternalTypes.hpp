@@ -33,7 +33,7 @@ namespace Fw {
                 const FwPrmIdType base_id,
                 const FwPrmIdType local_id,
                 const ParamValid prmStat,
-                ParamBuffer& buff) = 0;
+                SerializeBufferBase& buff) = 0;
 
             //! Serialize a parameter into a parameter buffer
             //!
@@ -45,7 +45,7 @@ namespace Fw {
             virtual SerializeStatus serializeParam(
                 const FwPrmIdType base_id,
                 const FwPrmIdType local_id,
-                ParamBuffer& buff) const = 0;
+                SerializeBufferBase& buff) const = 0;
         };
 
 }  // namespace Fw
