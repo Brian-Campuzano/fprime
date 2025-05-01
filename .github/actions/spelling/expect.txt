@@ -48,6 +48,7 @@ ASTRING
 ATester
 ATL
 ATMs
+ATSAM
 atypes
 AUTOBRIEF
 autocode
@@ -86,9 +87,9 @@ BUFFERALLOCATIONFAILED
 BUFFERGETOUT
 BUFFERMANAGERCOMPONENTIMPLCFG
 BUFFERMGR
+BUFFERQUEUEIN
 BUFFERTOOSMALLFORDATA
 BUFFERTOOSMALLFORPACKET
-BUFFQUEUEIN
 buffsize
 BUGLIST
 bugprone
@@ -156,6 +157,7 @@ COMMANDDISPATCHERIMPLCFG
 commandline
 commasepitem
 COMPACKET
+COMPACKETQUEUEIN
 COMPONENTTESTERIMPL
 COMQUEUE
 COMQUEUEIN
@@ -435,6 +437,7 @@ hidecallgraph
 hideinitializer
 hlp
 HLTH
+HPSC
 htags
 HTH
 htmlfile
@@ -699,6 +702,7 @@ pbuild
 pcmake
 pcomp
 pdflatex
+PEB
 Peet
 penv
 PERLMOD
@@ -1070,6 +1074,7 @@ viewcontent
 viewforum
 vla
 vlist
+VOXL
 vtype
 vuejs
 vwong
