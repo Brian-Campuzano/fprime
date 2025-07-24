@@ -56,6 +56,11 @@ class GenericHubComponentImpl final : public GenericHubComponentBase {
     void buffersIn_handler(const FwIndexType portNum, /*!< The port number*/
                            Fw::Buffer& fwBuffer);
 
+    //! Handler implementation for bufferReturnIn
+    //!
+    void bufferReturnIn_handler(const FwIndexType portNum, /*!< The port number*/
+                                Fw::Buffer& fwBuffer);
+
     //! Handler implementation for dataIn
     //!
     void dataIn_handler(const FwIndexType portNum, /*!< The port number*/
