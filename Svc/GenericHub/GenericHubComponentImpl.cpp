@@ -54,6 +54,7 @@ void GenericHubComponentImpl ::send_data(const HubType type,
 
 void GenericHubComponentImpl ::buffersIn_handler(const FwIndexType portNum, Fw::Buffer& fwBuffer) {
     send_data(HUB_TYPE_BUFFER, portNum, fwBuffer.getData(), fwBuffer.getSize());
+    // bufferDeallocate_out(0, fwBuffer);
 }
 
 void GenericHubComponentImpl ::bufferReturnIn_handler(const FwIndexType portNum, Fw::Buffer& fwBuffer) {
