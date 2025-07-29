@@ -41,6 +41,9 @@ module Svc {
     @ Data output to remote hub
     output port dataOut: Fw.BufferSend
 
+    @ Buffer returned from dataOut
+    sync input port bufferReturnIn: Fw.BufferSend
+
     @ Data input from remote hub
     sync input port dataIn: Fw.BufferSend
 
