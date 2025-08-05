@@ -171,8 +171,9 @@ void GenericHubTester ::from_dataOut_handler(const FwIndexType portNum, Fw::Buff
     ASSERT_LT(fwBuffer.getData(), m_data_for_allocation + sizeof(m_data_for_allocation))
         << "Incorrect data pointer deallocated";
     // Reuse m_allocate to pass into the otherside of the hub
-    this->pushFromPortEntry_dataOut(fwBuffer);
-    invoke_to_dataIn(0, fwBuffer);
+    ComCfg::FrameContext nullContext;
+    this->pushFromPortEntry_dataOut(fwBuffer, nullContext);
+    invoke_to_dataIn(0, fwBuffer, nullContext);
 }
 
 // ----------------------------------------------------------------------

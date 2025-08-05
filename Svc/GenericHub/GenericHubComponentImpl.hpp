@@ -53,36 +53,42 @@ class GenericHubComponentImpl final : public GenericHubComponentBase {
 
     //! Handler implementation for buffersIn
     //!
-    void buffersIn_handler(const FwIndexType portNum, /*!< The port number*/
-                           Fw::Buffer& fwBuffer);
+    void buffersIn_handler(const FwIndexType portNum, /*!< The port number */
+                           Fw::Buffer& fwBuffer       /*!< Input buffer to forward */
+    ) override;
 
     //! Handler implementation for bufferReturnIn
     //!
-    void bufferReturnIn_handler(const FwIndexType portNum, /*!< The port number*/
-                                Fw::Buffer& fwBuffer);
+    void bufferReturnIn_handler(const FwIndexType portNum,          /*!< The port number */
+                                Fw::Buffer& fwBuffer,               /*!< Buffer sent via dataOut being returned */
+                                const ComCfg::FrameContext& context /*!< Context of the returned buffer */
+    ) override;
 
     //! Handler implementation for dataIn
     //!
-    void dataIn_handler(const FwIndexType portNum, /*!< The port number*/
-                        Fw::Buffer& fwBuffer);
+    void dataIn_handler(const FwIndexType portNum,          /*!< The port number */
+                        Fw::Buffer& fwBuffer,               /*!< Buffer from the remote hub */
+                        const ComCfg::FrameContext& context /*!< Context of the returned buffer */
+    ) override;
 
     //! Handler implementation for LogRecv
     //!
-    void LogRecv_handler(const FwIndexType portNum,   /*!< The port number*/
+    void LogRecv_handler(const FwIndexType portNum,       /*!< The port number */
                          FwEventIdType id,                /*!< Log ID */
                          Fw::Time& timeTag,               /*!< Time Tag */
                          const Fw::LogSeverity& severity, /*!< The severity argument */
                          Fw::LogBuffer& args              /*!< Buffer containing serialized log entry */
-    );
+    ) override;
 
     //! Handler implementation for TlmRecv
     //!
     void TlmRecv_handler(const FwIndexType portNum, /*!< The port number*/
-                         FwChanIdType id,               /*!< Telemetry Channel ID */
-                         Fw::Time& timeTag,             /*!< Time Tag */
-                         Fw::TlmBuffer& val             /*!< Buffer containing serialized telemetry value */
-    );
+                         FwChanIdType id,           /*!< Telemetry Channel ID */
+                         Fw::Time& timeTag,         /*!< Time Tag */
+                         Fw::TlmBuffer& val         /*!< Buffer containing serialized telemetry value */
+    ) override;
 
+  private:
     // ----------------------------------------------------------------------
     // Handler implementations for user-defined serial input ports
     // ----------------------------------------------------------------------
@@ -91,9 +97,12 @@ class GenericHubComponentImpl final : public GenericHubComponentBase {
     //!
     void portIn_handler(FwIndexType portNum,        /*!< The port number*/
                         Fw::SerializeBufferBase& Buffer /*!< The serialization buffer*/
-    );
+    ) override;
 
-    // Helpers and members
+  private:
+    // ----------------------------------------------------------------------
+    // Private helpers
+    // ----------------------------------------------------------------------
     void send_data(const HubType type, const FwIndexType port, const U8* data, const FwSizeType size);
 };
 
