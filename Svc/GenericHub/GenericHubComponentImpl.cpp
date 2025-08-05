@@ -73,6 +73,7 @@ void GenericHubComponentImpl ::dataIn_handler(const FwIndexType portNum, Fw::Buf
     U32 port = 0;
     FwBuffSizeType size = 0;
     Fw::SerializeStatus status = Fw::FW_SERIALIZE_OK;
+    ComCfg::FrameContext nullContext;
 
     // Context is not used in the hub pattern
     (void) context;
@@ -99,7 +100,7 @@ void GenericHubComponentImpl ::dataIn_handler(const FwIndexType portNum, Fw::Buf
         FW_ASSERT(status == Fw::FW_SERIALIZE_OK, static_cast<FwAssertArgType>(status));
         portOut_out(static_cast<FwIndexType>(port), wrapper);
         // Deallocate the existing buffer
-        dataInDeallocate_out(0, fwBuffer);
+        dataInDeallocate_out(0, fwBuffer, nullContext);
     } else if (type == HUB_TYPE_BUFFER) {
         // Fw::Buffers can reuse the existing data buffer as the storage type!  No deallocation done.
         fwBuffer.set(rawData, rawSize, fwBuffer.getContext());
@@ -124,7 +125,7 @@ void GenericHubComponentImpl ::dataIn_handler(const FwIndexType portNum, Fw::Buf
         this->LogSend_out(static_cast<FwIndexType>(port), id, timeTag, severity, args);
 
         // Deallocate the existing buffer
-        dataInDeallocate_out(0, fwBuffer);
+        dataInDeallocate_out(0, fwBuffer, nullContext);
     } else if (type == HUB_TYPE_CHANNEL) {
         FwChanIdType id;
         Fw::Time timeTag;
@@ -142,7 +143,7 @@ void GenericHubComponentImpl ::dataIn_handler(const FwIndexType portNum, Fw::Buf
         this->TlmSend_out(static_cast<FwIndexType>(port), id, timeTag, val);
 
         // Deallocate the existing buffer
-        dataInDeallocate_out(0, fwBuffer);
+        dataInDeallocate_out(0, fwBuffer, nullContext);
     }
 }
 

@@ -222,13 +222,15 @@ void GenericHubTester ::from_bufferDeallocate_handler(const FwIndexType portNum,
 }
 
 void GenericHubTester ::from_dataInDeallocate_handler(const FwIndexType portNum, Fw::Buffer& fwBuffer) {
+    ComCfg::FrameContext nullContext;
+
     ASSERT_NE(fwBuffer.getData(), nullptr) << "Empty buffer to deallocate";
     ASSERT_GE(fwBuffer.getData(), m_data_for_allocation) << "Incorrect data pointer deallocated";
     ASSERT_LT(fwBuffer.getData(), m_data_for_allocation + sizeof(m_data_for_allocation))
         << "Incorrect data pointer deallocated";
 
     m_allocate.set(nullptr, 0);
-    this->pushFromPortEntry_dataInDeallocate(fwBuffer);
+    this->pushFromPortEntry_dataInDeallocate(fwBuffer, nullContext);
 }
 
 // ----------------------------------------------------------------------

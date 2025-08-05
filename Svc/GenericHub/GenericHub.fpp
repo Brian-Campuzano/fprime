@@ -39,16 +39,16 @@ module Svc {
     output port bufferDeallocate: Fw.BufferSend
 
     @ Data output to remote hub
-    output port dataOut:  Svc.ComDataWithContext
+    output port dataOut: Svc.ComDataWithContext
 
     @ Buffer returned from dataOut
-    sync input port bufferReturnIn:  Svc.ComDataWithContext
+    sync input port bufferReturnIn: Svc.ComDataWithContext
 
     @ Data input from remote hub
-    sync input port dataIn:  Svc.ComDataWithContext
+    sync input port dataIn: Svc.ComDataWithContext
 
     @ Deallocation of buffer passed into data in
-    output port dataInDeallocate: Fw.BufferSend
+    output port dataInDeallocate: Svc.ComDataWithContext
 
     @ Allocation of buffer passed to passed out dataOut
     output port dataOutAllocate: Fw.BufferGet
