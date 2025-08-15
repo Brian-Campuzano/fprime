@@ -45,9 +45,7 @@ void GenericHubComponentImpl ::send_data(const HubType type,
     status = serialize.serialize(data, size);
     FW_ASSERT(status == Fw::FW_SERIALIZE_OK, static_cast<FwAssertArgType>(status));
     outgoing.setSize(static_cast<U32>(serialize.getBuffLength()));
-    // Send data out, context is not used in the hub pattern
-    ComCfg::FrameContext nullContext;
-    dataOut_out(0, outgoing, nullContext);
+    dataOut_out(0, outgoing);
 }
 
 // ----------------------------------------------------------------------
@@ -59,10 +57,8 @@ void GenericHubComponentImpl ::buffersIn_handler(const FwIndexType portNum, Fw::
 }
 
 void GenericHubComponentImpl ::bufferReturnIn_handler(const FwIndexType portNum,
-                                                      Fw::Buffer& fwBuffer,
-                                                      const ComCfg::FrameContext& context) {
-    // Return the buffer irrespective of the supplied context
-    (void) context;
+                                                      Fw::Buffer& fwBuffer) {
+    // Deallocate the returned buffer
     bufferDeallocate_out(0, fwBuffer);
 }
 
