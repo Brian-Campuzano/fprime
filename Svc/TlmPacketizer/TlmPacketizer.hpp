@@ -160,16 +160,16 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     FwChanIdType m_startLevel;  //!< initial level for sending packets
     FwChanIdType m_maxLevel;    //!< maximum level in all packets
     
-    U32 m_sendCounter[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS] {0};   //!< Counter for Primary/Secondary/Tertiary RG driven send deltas
+    U32 m_sendCounter[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] {0};   //!< Counter for Primary/Secondary/Tertiary RG driven send deltas
 
     struct deltaConfig {
         U32 min = 0;            //!< Default for Backwards Compatible Behavior
         U32 max = 0xFFFFFFFF;   //!< Default for Backwards Compatible Behavior
     } m_deltaConfig[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{};
-    
-    Fw::Enabled m_groupEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{Fw::Enabled::ENABLED};
-    bool m_sendUpdateFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{false};
 
+    Fw::Enabled m_groupEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{Fw::Enabled::ENABLED};
+    bool m_sendUpdateFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{false};
+    bool m_sentFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{false};
 };
 
 }  // end namespace Svc
