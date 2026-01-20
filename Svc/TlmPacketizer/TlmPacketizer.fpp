@@ -8,7 +8,7 @@ module Svc {
     # ----------------------------------------------------------------------
 
     @ Packet send port
-    output port PktSend: Fw.Com
+    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS] Fw.Com
 
     @ Ping input port
     async input port pingIn: Svc.Ping
@@ -50,6 +50,12 @@ module Svc {
     @ Time get
     time get port timeGetOut
 
+    @ Param Get
+    param get port prmGetOut
+
+    @ Param Set
+    param set port prmSetOut
+
     # ----------------------------------------------------------------------
     # Commands
     # ----------------------------------------------------------------------
@@ -65,6 +71,23 @@ module Svc {
                             $id: U32 @< The packet ID
                           ) \
       opcode 1
+
+    async command ENABLE_GROUP(
+                                portOut: FwIndexType    @< Port to configure
+                                tlmGroup: FwChanIdType  @< Group Level
+                                enable: Fw.Enabled       @< Active Sending Group
+                              ) \
+      opcode 2
+
+    async command SET_GROUP_DELTAS(
+                                    portOut: FwIndexType    @< Port to configure
+                                    tlmGroup: FwChanIdType  @< Group Level
+                                    minDelta: U32
+                                    maxDelta: U32
+                                  ) \
+      opcode 3
+
+    
 
     # ----------------------------------------------------------------------
     # Events
@@ -118,6 +141,12 @@ module Svc {
     @ Telemetry send level
     telemetry SendLevel: FwChanIdType id 0
 
+    # ----------------------------------------------------------------------
+    # Params
+    # ----------------------------------------------------------------------
+  
+    array ForceConfigurations = [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS] Fw.Active default Fw.Active.ACTIVE
+    param FORCE_OUT: ForceConfigurations
   }
 
 }

@@ -15,6 +15,7 @@
 #include "Svc/TlmPacketizer/TlmPacketizerComponentAc.hpp"
 #include "Svc/TlmPacketizer/TlmPacketizerTypes.hpp"
 #include "config/TlmPacketizerCfg.hpp"
+#include "Fw/Types/EnabledEnumAc.hpp"
 
 namespace Svc {
 
@@ -85,6 +86,22 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                              U32 id                     /*!< The packet ID*/
                              ) override;
 
+    //! Handler implementation for command ENABLE_GROUP
+    void ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+                                 U32 cmdSeq,             //!< The command sequence number
+                                 FwIndexType portOut,    //!< Port to configure
+                                 FwChanIdType tlmGroup,  //!< Group Level
+                                 Fw::Enabled enable      //!< Active Sending Group
+                                 ) override;
+
+    //! Handler implementation for command SET_GROUP_DELTAS
+    void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+                                     U32 cmdSeq,             //!< The command sequence number
+                                     FwIndexType portOut,    //!< Port to configure
+                                     FwChanIdType tlmGroup,  //!< Group Level
+                                     U32 minDelta,
+                                     U32 maxDelta) override;
+
     // number of packets to fill
     FwChanIdType m_numPackets;
     // Array of packet buffers to send
@@ -126,7 +143,8 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     // hash function for looking up telemetry channel
     FwChanIdType doHash(FwChanIdType id);
 
-    Os::Mutex m_lock;  //!< used to lock access to packet buffers
+    Os::Mutex m_lock;        //!< used to lock access to packet buffers
+    Os::Mutex m_lock_param;  //!< used to lock access to parameters
 
     bool m_configured;  //!< indicates a table has been passed and packets configured
 
@@ -141,6 +159,17 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     FwChanIdType m_startLevel;  //!< initial level for sending packets
     FwChanIdType m_maxLevel;    //!< maximum level in all packets
+    
+    U32 m_sendCounter[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS] {0};   //!< Counter for Primary/Secondary/Tertiary RG driven send deltas
+
+    struct deltaConfig {
+        U32 min = 0;            //!< Default for Backwards Compatible Behavior
+        U32 max = 0xFFFFFFFF;   //!< Default for Backwards Compatible Behavior
+    } m_deltaConfig[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{};
+    
+    Fw::Enabled m_groupEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{Fw::Enabled::ENABLED};
+    bool m_sendUpdateFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{false};
+
 };
 
 }  // end namespace Svc
