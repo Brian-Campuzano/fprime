@@ -1,8 +1,12 @@
 module Svc {
-
   @ A component for storing telemetry
   active component TlmPacketizer {
-
+    enum RateLogic {
+      SILENCED,
+      EVERY_MAX,
+      ON_CHANGE_MIN,
+      ON_CHANGE_MIN_AND_EVERY_MAX,
+    }
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
@@ -75,17 +79,25 @@ module Svc {
     async command ENABLE_GROUP(
                                 portOut: FwIndexType    @< Port to configure
                                 tlmGroup: FwChanIdType  @< Group Level
-                                enable: Fw.Enabled       @< Active Sending Group
+                                enable: Fw.Enabled      @< Active Sending Group
                               ) \
       opcode 2
+    
+    async command FORCE_GROUP(
+                                    portOut: FwIndexType    @< Port to configure
+                                    tlmGroup: FwChanIdType  @< Group Level
+                                    enable: Fw.Enabled      @< Active Sending Group
+                                  ) \
+      opcode 3
 
     async command SET_GROUP_DELTAS(
                                     portOut: FwIndexType    @< Port to configure
                                     tlmGroup: FwChanIdType  @< Group Level
+                                    rateLogic: RateLogic    @< Rate Logic
                                     minDelta: U32
                                     maxDelta: U32
                                   ) \
-      opcode 3
+      opcode 4
 
     
 

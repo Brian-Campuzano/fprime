@@ -79,6 +79,10 @@ class TlmPacketizerTester : public TlmPacketizerGTestBase {
     //!
     void getChannelValueTest(void);
 
+    //! Configured tlm groups test
+    //!
+    void configuredTelemetryGroupsTests(void);
+
   private:
     // ----------------------------------------------------------------------
     // Handlers for typed from ports
@@ -126,6 +130,8 @@ class TlmPacketizerTester : public TlmPacketizerGTestBase {
     TlmPacketizer component;
 
     Fw::Time m_testTime;  //!< store test time for packets
+
+    bool m_port0Lock{true}; //! Lock limited to entries from port 0 PktSend 
 };
 
 }  // end namespace Svc

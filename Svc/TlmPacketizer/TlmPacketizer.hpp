@@ -20,6 +20,9 @@
 namespace Svc {
 
 class TlmPacketizer final : public TlmPacketizerComponentBase {
+
+  friend class TlmPacketizerTester;
+
   public:
     // ----------------------------------------------------------------------
     // Construction, initialization, and destruction
@@ -94,11 +97,20 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                                  Fw::Enabled enable      //!< Active Sending Group
                                  ) override;
 
+    //! Handler implementation for command FORCE_GROUP
+    void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+                                U32 cmdSeq,             //!< The command sequence number
+                                FwIndexType portOut,    //!< Port to configure
+                                FwChanIdType tlmGroup,  //!< Group Level
+                                Fw::Enabled enable      //!< Active Sending Group
+                                ) override;
+
     //! Handler implementation for command SET_GROUP_DELTAS
-    void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,    //!< The opcode
-                                     U32 cmdSeq,             //!< The command sequence number
-                                     FwIndexType portOut,    //!< Port to configure
-                                     FwChanIdType tlmGroup,  //!< Group Level
+    void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,                     //!< The opcode
+                                     U32 cmdSeq,                              //!< The command sequence number
+                                     FwIndexType portOut,                     //!< Port to configure
+                                     FwChanIdType tlmGroup,                   //!< Group Level
+                                     Svc::TlmPacketizer_RateLogic rateLogic,  //!< Rate Logic
                                      U32 minDelta,
                                      U32 maxDelta) override;
 
@@ -159,17 +171,19 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     FwChanIdType m_startLevel;  //!< initial level for sending packets
     FwChanIdType m_maxLevel;    //!< maximum level in all packets
-    
-    U32 m_sendCounter[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] {0};   //!< Counter for Primary/Secondary/Tertiary RG driven send deltas
+   
+    struct GroupConfig {
+        Fw::Enabled enabled = Fw::Enabled::ENABLED;
+        Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
+        TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
+        U32 min = 0;                //!< Default for Backwards Compatible Behavior
+        U32 max = 0;       //!< Default for Backwards Compatible Behavior
+    } m_groupConfigs[NUM_PKTSEND_OUTPUT_PORTS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
-    struct deltaConfig {
-        U32 min = 0;            //!< Default for Backwards Compatible Behavior
-        U32 max = 0xFFFFFFFF;   //!< Default for Backwards Compatible Behavior
-    } m_deltaConfig[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{};
-
-    Fw::Enabled m_groupEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{Fw::Enabled::ENABLED};
-    bool m_sendUpdateFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{false};
-    bool m_sentFlag[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{false};
+    struct PktSendCounters {
+        U32 prevSentCounter = 0;
+        bool updateFlag = false;
+    }  m_packetFlags[NUM_PKTSEND_OUTPUT_PORTS][MAX_PACKETIZER_PACKETS]{};
 };
 
 }  // end namespace Svc

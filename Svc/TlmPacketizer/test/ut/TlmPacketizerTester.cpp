@@ -43,11 +43,20 @@ TlmPacketizerChannelEntry packet1List[] = {{10, 4}, {100, 2}, {333, 1}};
 
 TlmPacketizerChannelEntry packet2List[] = {{10, 4}, {13, 8}, {250, 2}, {22, 1}};
 
+TlmPacketizerChannelEntry packet3List[] = {{10, 4}, {67, 4}};
+
+TlmPacketizerChannelEntry packet4List[] = {{10, 4}, {60, 4}};
+
 TlmPacketizerPacket packet1 = {packet1List, 4, 1, FW_NUM_ARRAY_ELEMENTS(packet1List)};
 
 TlmPacketizerPacket packet2 = {packet2List, 8, 2, FW_NUM_ARRAY_ELEMENTS(packet2List)};
 
+TlmPacketizerPacket packet3 = {packet3List, 12, 1, FW_NUM_ARRAY_ELEMENTS(packet3List)};
+
+TlmPacketizerPacket packet4 = {packet4List, 16, 2, FW_NUM_ARRAY_ELEMENTS(packet4List)};
+
 TlmPacketizerPacketList packetList = {{&packet1, &packet2}, 2};
+TlmPacketizerPacketList packetList2 = {{&packet1, &packet2, &packet3, &packet4}, 4};
 
 TlmPacketizerChannelEntry ignoreList[] = {{25, 0}, {50, 0}};
 
@@ -941,14 +950,188 @@ void TlmPacketizerTester ::getChannelValueTest() {
     ASSERT_EQ(valid, Fw::TlmValid::INVALID);
 }
 
+//! Configured tlm groups test
+//!
+void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
+    this->component.setPacketList(packetList2, ignore, 4);
+    this->m_port0Lock = false;
+    Fw::Time time;
+    Fw::TlmBuffer buffer;
+
+    // Arguments: opCode, cmdSeq, portOut, tlmGroup, minDelta, maxDelta
+    
+    // Group 1
+    // Send Immediate On Change on port 0
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 0, 0);
+    this->component.doDispatch();
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    // Send every 5 on port 1
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 5);
+    this->component.doDispatch();
+    this->sendCmd_ENABLE_GROUP(0, 0, 1, 1, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    // Disable on Port 2
+    this->sendCmd_ENABLE_GROUP(0, 0, 2, 1, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    this->clearHistory();
+
+    // Group 2
+    // Send Every 2
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 2);
+    this->component.doDispatch();
+    this->sendCmd_ENABLE_GROUP(0, 0, 1, 2, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 2, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_AND_EVERY_MAX, 3, 5);
+    this->component.doDispatch();
+    this->sendCmd_ENABLE_GROUP(0, 0, 2, 2, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    // Silence 2nd Packet on port 0
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
+    this->component.doDispatch();
+    // Redundant Enable to Test silence logic.
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 2, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    this->clearHistory();
+
+
+
+    /*
+    Port 0 Gorup 1: 3, 15           MIN 3
+    Port 1 Group 1: 2, 14           MIN 2
+    Port 0 Group 2: 1, 4, 13, 16.   MIN 1, MAX 12
+    Port 1 Group 2: 0, 7, 12, 18.   MIN 0, MAX 7
+    Port 2 Group 1: 6, 18.          MAX 6
+    Port 2 group 2 Ignored
+    */
+
+
+    // Music Melody Testing!
+    // Expected Behavior:
+    /*
+
+                       
+                    T=0     T=1     T=2     T=3     T=4     T=5     T=6     T=7     T=8     T=9     T=10    T=11    T=12    T=13    T=14    T=15    T=16    T=17    T=18    T=19    T=20 
+                    
+                    -|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|
+    Port 0 Group 1   O                       O       |                               |                               O                       O       |                               |                               |
+    Port 1 Group 1  -O---------------O---------------|-------------------------------|-------------------------------O---------------O---------------|-------------------------------|-------------------------------|
+    Port 0 Group 2   O       O                       O                               |                               O       O                       O                               |                               |
+    Port 1 Group 2  -O-------------------------------|-----------------------O-------|-------------------------------O-------------------------------|-----------------------O-------|-------------------------------|
+    Port 2 Group 1   O                               |               O               |                               O                               |               O               |                               |
+    Port 2 Group 2  -|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|
+                     |                               |                               |                               |                               |                               |                               |
+                    -|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|
+    */
+
+    // Group 1
+    // first channel
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(20)));
+    this->invoke_to_TlmRecv(0, 10, time, buffer);
+
+    // second channel
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U16>(15)));
+    this->invoke_to_TlmRecv(0, 100, time, buffer);
+
+    // third channel
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U8>(14)));
+    this->invoke_to_TlmRecv(0, 333, time, buffer);
+
+
+    // Group 2
+    // 1st channel
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U64>(1000000)));
+    this->invoke_to_TlmRecv(0, 13, time, buffer);
+
+    // 2nd channel
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U16>(1010)));
+    this->invoke_to_TlmRecv(0, 250, time, buffer);
+
+    // 3rd channel
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U8>(15)));
+    this->invoke_to_TlmRecv(0, 22, time, buffer);
+
+
+    this->setTestTime(this->m_testTime);
+    // run scheduler port to send packets
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+
+    ASSERT_FROM_PORT_HISTORY_SIZE(2);
+    ASSERT_from_PktSend_SIZE(2);
+
+    // construct the packet buffers and make sure they are correct
+
+    Fw::ComBuffer comBuff;
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(4)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
+
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(1000000)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
+
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+
+    this->clearHistory();
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+
+    ASSERT_FROM_PORT_HISTORY_SIZE(2);
+    ASSERT_from_PktSend_SIZE(2);
+
+    // construct the packet buffers and make sure they are correct
+
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(4)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
+
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(1000000)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
+
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+}
+
 // ----------------------------------------------------------------------
 // Handlers for typed from ports
 // ----------------------------------------------------------------------
 
 void TlmPacketizerTester ::from_PktSend_handler(const FwIndexType portNum, Fw::ComBuffer& data, U32 context) {
-    if (portNum == 0) {
-        this->pushFromPortEntry_PktSend(data, context);
+    if (this->m_port0Lock && portNum != 0) {
+        return;
     }
+    this->pushFromPortEntry_PktSend(data, context);
 }
 
 void TlmPacketizerTester ::from_pingOut_handler(const FwIndexType portNum, U32 key) {
