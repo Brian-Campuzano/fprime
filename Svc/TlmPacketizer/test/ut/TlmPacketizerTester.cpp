@@ -956,31 +956,37 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->component.setPacketList(packetList2, ignore, 4);
     this->m_port0Lock = false;
     Fw::Time time;
-    // time = this->m_testTime;
-    // time.set(0, 0);
-    // this->m_testTime = time;
-    // this->setTestTime(this->m_testTime);
-
     Fw::TlmBuffer buffer;
+    this->sendCmd_SET_LEVEL(0, 0, 0);
+    this->component.doDispatch();
+    
+    // 1st Channel (Pkt 1, 2, 4)
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(0xFFFF)));
+    this->invoke_to_TlmRecv(0, 10, time, buffer);
 
-    // this->invoke_to_Run(0, 0);
-    // this->component.doDispatch();
-    // ASSERT_from_PktSend_SIZE(0);    
+    // T = -1 (Check to see that setting level 0 does not emit packets)
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+
+    ASSERT_FROM_PORT_HISTORY_SIZE(0);
+    ASSERT_from_PktSend_SIZE(0);
+
+    this->clearHistory();
     
     // time.set(100, 1000);
 
     // Arguments: opCode, cmdSeq, portOut, tlmGroup, minDelta, maxDelta
     
+    // Set level to 3 to enable all levels
+    this->sendCmd_SET_LEVEL(0, 0, 10);
+    this->component.doDispatch();    
+    
     // Group 1
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 3, 3);
-    this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
     this->component.doDispatch();
     
     // Send every 5 on port 1
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
-    this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 1, 1, Fw::Enabled::ENABLED);
     this->component.doDispatch();
 
     // Disable on Port 2
@@ -990,8 +996,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     // Group 2
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_AND_EVERY_MAX, 4, 12);
-    this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 2, Fw::Enabled::ENABLED);
     this->component.doDispatch();
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
@@ -1006,16 +1010,18 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     // Group 3
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_AND_EVERY_MAX, 0, 7);
     this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 1, 3, Fw::Enabled::ENABLED);
-    this->component.doDispatch();
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
     this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 3, Fw::Enabled::ENABLED);
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 3, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    this->sendCmd_FORCE_GROUP(0, 0, 0, 3, Fw::Enabled::ENABLED);    // Force Group enables this group on port 0
     this->component.doDispatch();
     
     this->sendCmd_ENABLE_GROUP(0, 0, 2, 3, Fw::Enabled::DISABLED);
     this->component.doDispatch();
+    
+
     this->clearHistory();
 
     /*
@@ -1062,7 +1068,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     Expected Output: 5       1       1       1       1       0       1       1       0       0       0       0       5
     */
 
+        
     // 1st Channel (Pkt 1, 2, 4)
+    buffer.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(1)));
     this->invoke_to_TlmRecv(0, 10, time, buffer);
 
@@ -1364,7 +1372,6 @@ void TlmPacketizerTester ::connectPorts() {
     // PktSend
     this->component.set_PktSend_OutputPort(0, this->get_from_PktSend(0));
     this->component.set_PktSend_OutputPort(1, this->get_from_PktSend(1));
-    this->component.set_PktSend_OutputPort(2, this->get_from_PktSend(2));
 
     // Run
     this->connect_to_Run(0, this->component.get_Run_InputPort(0));

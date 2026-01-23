@@ -106,10 +106,19 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
         if (packetList.list[pktEntry]->level > this->m_maxLevel) {
             this->m_maxLevel = packetList.list[pktEntry]->level;
         }
-        // save start level
-        this->m_startLevel = startLevel;
+        
 
     }  // end packet list
+    
+    // save start level
+    this->m_startLevel = startLevel;
+
+    // enable / disable appropriate groups
+    for (FwIndexType port = 0; port < NUM_PKTSEND_OUTPUT_PORTS; port++) {
+        for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+            this->m_groupConfigs[port][group].enabled = group <= this->m_startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+        }
+    }
 
     // populate hash table with ignore list
     for (FwChanIdType channelEntry = 0; channelEntry < ignoreList.numEntries; channelEntry++) {
@@ -338,8 +347,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
     this->m_lock.lock();
     // copy buffers from fill side to send side
     for (FwChanIdType pkt = 0; pkt < this->m_numPackets; pkt++) {
-        if ((this->m_fillBuffers[pkt].updated) and
-            ((this->m_fillBuffers[pkt].level <= this->m_startLevel) or (this->m_fillBuffers[pkt].requested))) {
+        if ((this->m_fillBuffers[pkt].updated) or (this->m_fillBuffers[pkt].requested)) {
             this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt];
             if (PACKET_UPDATE_ON_CHANGE == PACKET_UPDATE_MODE) {
                 this->m_fillBuffers[pkt].updated = false;
@@ -371,19 +379,19 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
         // Iterate through output ports
         for (FwIndexType port = 0; port < NUM_PKTSEND_OUTPUT_PORTS; port++)
         {
-            PktSendCounters& pktEntryFlags = this->m_packetFlags[port][pkt];
-            // printf("TESTING PKT %d PORT %d\n", pkt, port);
             if (not this->isConnected_PktSend_OutputPort(port))
             {
                 continue;
             }
 
+            PktSendCounters& pktEntryFlags = this->m_packetFlags[port][pkt];
+            if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF){
+                pktEntryFlags.prevSentCounter++;
+            }   
+
             if (entryGroup <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP and not this->m_sendBuffers[pkt].requested) {
                 GroupConfig& entryGroupConfig = this->m_groupConfigs[port][entryGroup];
-                if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED)
-                {
-                    continue;
-                }
+                   
 
                 // If a packet in the group has been updated since last sent on port
                 if (pktEntryFlags.updateFlag) {
@@ -394,10 +402,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     // If counter is less than delta min
                     } else if (pktEntryFlags.prevSentCounter < entryGroupConfig.min) {
                         // Keep flag true but do not send.
-                        if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF)
-                        {
-                            pktEntryFlags.prevSentCounter++;
-                        }
+
                         continue;
                     }
                 }
@@ -410,18 +415,16 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     pktEntryFlags.updateFlag = true;
                 }
                 
-                if (not (entryGroupConfig.enabled or entryGroupConfig.forceEnabled)) {
+                if (not (entryGroupConfig.enabled or entryGroupConfig.forceEnabled) or 
+                    entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) {
                     pktEntryFlags.updateFlag = false;
                 }
             }
-
             // Send under the following conditions:
-            // 1. Packet received updates and it has been past delta min counts since last packet (and min is configured)
-            // 2. Packet has passed delta max counts since last packet (and max is configured)
+            // 1. Packet received updates and it has been past delta min counts since last packet (min enabled)
+            // 2. Packet has passed delta max counts since last packet (max enabled)
             // With the above, the group must be either enabled or force enabled.
-            // 3. If the group of the packet lies above the max configurable tlmpacketizer group, update behavior is
-            // determined fully on updates or emitted always.
-            // 4. If the packet was requested.
+            // 3. If the packet was requested.
             if (pktEntryFlags.updateFlag) {
                 // serialize time into time offset in packet
                 Fw::ExternalSerializeBuffer buff(
@@ -433,10 +436,6 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                 this->PktSend_out(port, this->m_sendBuffers[pkt].buffer, 0);
                 pktEntryFlags.prevSentCounter = 0;
                 pktEntryFlags.updateFlag = false;
-            }
-            if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF)
-            {
-                pktEntryFlags.prevSentCounter++;
             }
         }
         this->m_sendBuffers[pkt].requested = false;
@@ -456,6 +455,11 @@ void TlmPacketizer ::SET_LEVEL_cmdHandler(const FwOpcodeType opCode, const U32 c
     this->m_startLevel = level;
     if (level > this->m_maxLevel) {
         this->log_WARNING_LO_MaxLevelExceed(level, this->m_maxLevel);
+    }
+    for (FwIndexType port = 0; port < NUM_PKTSEND_OUTPUT_PORTS; port++) {
+        for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+            this->m_groupConfigs[port][group].enabled = group <= this->m_startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+        }
     }
     this->tlmWrite_SendLevel(level);
     this->log_ACTIVITY_HI_LevelSet(level);
