@@ -394,7 +394,10 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     // If counter is less than delta min
                     } else if (pktEntryFlags.prevSentCounter < entryGroupConfig.min) {
                         // Keep flag true but do not send.
-                        pktEntryFlags.prevSentCounter++;
+                        if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF)
+                        {
+                            pktEntryFlags.prevSentCounter++;
+                        }
                         continue;
                     }
                 }
@@ -427,9 +430,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     Fw::Time::SERIALIZED_SIZE);
                 Fw::SerializeStatus stat = buff.serializeFrom(this->m_sendBuffers[pkt].latestTime);
                 FW_ASSERT(Fw::FW_SERIALIZE_OK == stat, stat);
-
                 this->PktSend_out(port, this->m_sendBuffers[pkt].buffer, 0);
-                // printf("PKT SENT %d PORT %d\n", pkt, port);
                 pktEntryFlags.prevSentCounter = 0;
                 pktEntryFlags.updateFlag = false;
             }

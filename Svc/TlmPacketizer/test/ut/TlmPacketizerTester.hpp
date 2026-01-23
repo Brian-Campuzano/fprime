@@ -131,7 +131,9 @@ class TlmPacketizerTester : public TlmPacketizerGTestBase {
 
     Fw::Time m_testTime;  //!< store test time for packets
 
-    bool m_port0Lock{true}; //! Lock limited to entries from port 0 PktSend 
+    bool m_port0Lock{true}; //! Lock limited to entries from port 0 PktSend
+
+    // Svc::Queue m_portCalls{};
 };
 
 }  // end namespace Svc

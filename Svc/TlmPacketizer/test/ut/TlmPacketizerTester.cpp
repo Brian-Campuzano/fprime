@@ -1048,11 +1048,11 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
                     T=0     T=1     T=2     T=3     T=4     T=5     T=6     T=7     T=8     T=9     T=10    T=11    T=12    
                     
     (Bass Clef)     -|-------------------------------|-------------------------------|-------------------------------|-
-    Port 0 Group 1   O                       O       |                               |                               O 
-    Port 1 Group 1  -O---------------O---------------|-------------------------------|-------------------------------O-
-    Port 0 Group 2   O       O                       O                               |                               O 
-    Port 1 Group 3  -O-------------------------------|-----------------------O-------|-------------------------------O-
-    Port 0 Group 3   O                               |               O               |                               O 
+    Port 0 Group 1   ●                       ●       |                               |                               ● 
+    Port 1 Group 1  -●---------------●---------------|-------------------------------|-------------------------------●-
+    Port 0 Group 2   ●       ●                       ●                               |                               ● 
+    Port 1 Group 3  -●-------------------------------|-----------------------●-------|-------------------------------●-
+    Port 0 Group 3   ●                               |               ●               |                               ● 
     Port 1 Group 2  -|-------------------------------|-------------------------------|-------------------------------|-
                      |                               |                               |                               | 
                     -|-------------------------------|-------------------------------|-------------------------------|-
@@ -1096,13 +1096,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(2)));
     this->invoke_to_TlmRecv(0, 60, time, buffer);
 
-    // this->m_testTime.add(1, 0);
-    // this->setTestTime(this->m_testTime);
-
-
     // run scheduler port to send packets
-    // T=0
-    // this->clearFromPortHistory();
+    // T = 0
     this->invoke_to_Run(0, 0);
     
     this->component.doDispatch();
@@ -1170,8 +1165,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->invoke_to_TlmRecv(0, 67, time, buffer);
 
 
-    // T=1
-
+    // T = 1
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
 
@@ -1189,7 +1183,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     this->clearHistory();
 
-    
+    // T = 2
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
 
@@ -1206,16 +1200,107 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(22)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
+    // Pkt 1 on Port 1
     ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
     
     this->clearHistory();
 
-
+    // T = 3
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
 
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
+
+    // Pkt 1 on Port 0
+    // comBuff unchanged since this->m_testTime is the same
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    this->clearHistory();
+
+    // T = 4
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+
+    // Pkt 2 on Port 0
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(1)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(22)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
+
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    this->clearHistory();
+
+    // T = 5
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    
+    // Not expecting any packets
+    ASSERT_FROM_PORT_HISTORY_SIZE(0);
+    ASSERT_from_PktSend_SIZE(0);
+
+    // T = 6
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+
+    // Pkt 4 on Port 1 (Unchanged since T = 0)
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(16)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(1)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
+
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    this->clearHistory();
+    
+    // T = 7
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+
+    // Pkt 4 on Port 0 (Unchanged since T = 0)
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+
+    this->clearHistory();
+
+    // T = 8-11, Expecting No Updates
+    for (U8 trial = 8; trial < 12; trial++) {
+        this->invoke_to_Run(0, 0);
+        this->component.doDispatch();
+    
+        ASSERT_FROM_PORT_HISTORY_SIZE(0);
+        ASSERT_from_PktSend_SIZE(0);
+    }
+
+    buffer.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(111)));
+    this->invoke_to_TlmRecv(0, 10, time, buffer);
+
+    this->clearHistory();
+    
+    // T = 12
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    
+    ASSERT_FROM_PORT_HISTORY_SIZE(5);
+    ASSERT_from_PktSend_SIZE(5);
 
     // Pkt 1
     comBuff.resetSer();
@@ -1223,38 +1308,37 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
               comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(4)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(1)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(111)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(22)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));   // Port 0
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));   // Port 1
 
+    // Pkt 2
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(111)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(22)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
+    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));   // Port 0
+    
+    // Pkt 4
+    comBuff.resetSer();
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
+              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(16)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(111)));
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
 
-    // // construct the packet buffers and make sure they are correct
-
-    // comBuff.resetSer();
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK,
-    //           comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(4)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
-
-    // ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
-
-    // comBuff.resetSer();
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK,
-    //           comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(1000000)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
-
-    // ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));   // Port 0
+    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));   // Port 1
 }
 
 // ----------------------------------------------------------------------
