@@ -372,9 +372,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
         for (FwIndexType port = 0; port < NUM_PKTSEND_OUTPUT_PORTS; port++)
         {
             PktSendCounters& pktEntryFlags = this->m_packetFlags[port][pkt];
-            pktEntryFlags.prevSentCounter++;
-            
-
+            // printf("TESTING PKT %d PORT %d\n", pkt, port);
             if (not this->isConnected_PktSend_OutputPort(port))
             {
                 continue;
@@ -431,8 +429,13 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                 FW_ASSERT(Fw::FW_SERIALIZE_OK == stat, stat);
 
                 this->PktSend_out(port, this->m_sendBuffers[pkt].buffer, 0);
+                // printf("PKT SENT %d PORT %d\n", pkt, port);
                 pktEntryFlags.prevSentCounter = 0;
                 pktEntryFlags.updateFlag = false;
+            }
+            if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF)
+            {
+                pktEntryFlags.prevSentCounter++;
             }
         }
         this->m_sendBuffers[pkt].requested = false;

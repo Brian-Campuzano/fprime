@@ -181,7 +181,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     } m_groupConfigs[NUM_PKTSEND_OUTPUT_PORTS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
     struct PktSendCounters {
-        U32 prevSentCounter = 0;
+        U32 prevSentCounter = 0xFFFFFFFF;
         bool updateFlag = false;
     }  m_packetFlags[NUM_PKTSEND_OUTPUT_PORTS][MAX_PACKETIZER_PACKETS]{};
 };
