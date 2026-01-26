@@ -92,7 +92,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Handler implementation for command ENABLE_GROUP
     void ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
                                  U32 cmdSeq,             //!< The command sequence number
-                                 FwIndexType portOut,    //!< Port to configure
+                                 FwIndexType section,    //!< Port to configure
                                  FwChanIdType tlmGroup,  //!< Group Level
                                  Fw::Enabled enable      //!< Active Sending Group
                                  ) override;
@@ -100,7 +100,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Handler implementation for command FORCE_GROUP
     void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
                                 U32 cmdSeq,             //!< The command sequence number
-                                FwIndexType portOut,    //!< Port to configure
+                                FwIndexType section,    //!< Port to configure
                                 FwChanIdType tlmGroup,  //!< Group Level
                                 Fw::Enabled enable      //!< Active Sending Group
                                 ) override;
@@ -108,7 +108,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Handler implementation for command SET_GROUP_DELTAS
     void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,                     //!< The opcode
                                      U32 cmdSeq,                              //!< The command sequence number
-                                     FwIndexType portOut,                     //!< Port to configure
+                                     FwIndexType section,                     //!< Port to configure
                                      FwChanIdType tlmGroup,                   //!< Group Level
                                      Svc::TlmPacketizer_RateLogic rateLogic,  //!< Rate Logic
                                      U32 minDelta,
@@ -178,12 +178,12 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
         TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
         U32 min = 0;                //!< Default for Backwards Compatible Behavior
         U32 max = 0;       //!< Default for Backwards Compatible Behavior
-    } m_groupConfigs[NUM_PKTSEND_OUTPUT_PORTS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
+    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
     struct PktSendCounters {
         U32 prevSentCounter = 0xFFFFFFFF;
         bool updateFlag = false;
-    }  m_packetFlags[NUM_PKTSEND_OUTPUT_PORTS][MAX_PACKETIZER_PACKETS]{};
+    }  m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{};
 };
 
 }  // end namespace Svc

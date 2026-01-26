@@ -26,7 +26,6 @@ TlmPacketizerTester ::TlmPacketizerTester()
     : TlmPacketizerGTestBase("Tester", MAX_HISTORY_SIZE), component("TlmPacketizer") {
     this->initComponents();
     this->connectPorts();
-    this->component.loadParameters();
 }
 
 TlmPacketizerTester ::~TlmPacketizerTester() {
@@ -954,7 +953,7 @@ void TlmPacketizerTester ::getChannelValueTest() {
 //!
 void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->component.setPacketList(packetList2, ignore, 4);
-    this->m_port0Lock = false;
+    this->m_primaryTestLock = false;
     Fw::Time time;
     Fw::TlmBuffer buffer;
     this->sendCmd_SET_LEVEL(0, 0, 0);
@@ -975,7 +974,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     
     // time.set(100, 1000);
 
-    // Arguments: opCode, cmdSeq, portOut, tlmGroup, minDelta, maxDelta
+    // Arguments: opCode, cmdSeq, section, tlmGroup, minDelta, maxDelta
     
     // Set level to 3 to enable all levels
     this->sendCmd_SET_LEVEL(0, 0, 10);
@@ -1354,7 +1353,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 // ----------------------------------------------------------------------
 
 void TlmPacketizerTester ::from_PktSend_handler(const FwIndexType portNum, Fw::ComBuffer& data, U32 context) {
-    if (this->m_port0Lock && portNum != 0) {
+    if (this->m_primaryTestLock && portNum > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP * 1) {
         return;
     }
     this->pushFromPortEntry_PktSend(data, context);
@@ -1370,8 +1369,8 @@ void TlmPacketizerTester ::from_pingOut_handler(const FwIndexType portNum, U32 k
 
 void TlmPacketizerTester ::connectPorts() {
     // PktSend
-    this->component.set_PktSend_OutputPort(0, this->get_from_PktSend(0));
-    this->component.set_PktSend_OutputPort(1, this->get_from_PktSend(1));
+    // this->component.set_PktSend_OutputPort(0, this->get_from_PktSend(0));
+    // this->component.set_PktSend_OutputPort(1, this->get_from_PktSend(1));
 
     // Run
     this->connect_to_Run(0, this->component.get_Run_InputPort(0));
@@ -1409,9 +1408,9 @@ void TlmPacketizerTester ::connectPorts() {
     // TlmGet
     this->connect_to_TlmGet(0, this->component.get_TlmGet_InputPort(0));
 
-    // Params
-    this->component.set_prmGetOut_OutputPort(0, this->get_from_prmGetOut(0));
-    this->component.set_prmSetOut_OutputPort(0, this->get_from_prmSetOut(0));
+    for (FwIndexType index = 0; index < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
+        this->component.set_PktSend_OutputPort(index, this->get_from_PktSend(index));
+    }
 }
 
 void TlmPacketizerTester::textLogIn(const FwEventIdType id,          //!< The event ID

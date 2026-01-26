@@ -4,6 +4,8 @@
 
 The `Svc::TlmPacketizer` Component is used to store telemetry values written by other components. The values are stored in serialized form. TlmPacketizer differs from `Svc::TlmChan` in that it stores telemetry in defined packets instead of streaming the updates as they come. The defined packets are passed in as a table to the `setPacketList()` public method. When telemetry updates are passed to the component, they are placed at the offset in a packet buffer defined by the table. When the `run()` port is called, all the defined packets are sent to the output port with the most recent . This is meant to replace `Svc::TlmCham` for use cases where a more compact packet format is desired. The disadvantage is that all channels are pushed whether or not they have been updated.
 
+Uses can change the individual rates at which groups per port instance are outputted upon a `run()` port call. Groups are configured with a MIN number of `run()` invocations to emit updated telemetry, and a MAX number of `run()` invocations that shall output a packet if it exceeds MAX. Packets are evaluated individually and have a counter since last invocation. MIN and MAX logic are selectable, for users that desire only "on change" telemetry, MAX invocations between telemetry points, both, or none at all.
+
 ## 2. Requirements
 
 The requirements for `Svc::TlmPacketizer` are as follows:
@@ -49,6 +51,12 @@ When a call to the `Run()` interface is called, the packet writes are locked and
 
 #### 3.3.1 External User Option
 
+#### 3.3.2 Configuring Telemetry Group Rates Per Port
+
+The `Svc::TlmPacketizer` is configurable to have multiple `PktSend` ports using the fpp constant, `MAX_CONFIGURABLE_TLMPACKETIZER_PORTS`. Doing so allows each packet group have different configurations for each `PktSend` output port. 
+
+
+
 ### 3.4 State
 
 `Svc::TlmPacketizer` has no state machines.
@@ -71,4 +79,5 @@ To see unit test coverage run fprime-util check --coverage
 Date | Description
 ---- | -----------
 12/14/2017 | Initial version
+01/23/2026 | Added group level rate logic
 

@@ -7,12 +7,13 @@ module Svc {
       ON_CHANGE_MIN,
       ON_CHANGE_MIN_AND_EVERY_MAX,
     }
+    
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
 
     @ Packet send port
-    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS] Fw.Com
+    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)] Fw.Com
 
     @ Ping input port
     async input port pingIn: Svc.Ping
@@ -54,12 +55,6 @@ module Svc {
     @ Time get
     time get port timeGetOut
 
-    @ Param Get
-    param get port prmGetOut
-
-    @ Param Set
-    param set port prmSetOut
-
     # ----------------------------------------------------------------------
     # Commands
     # ----------------------------------------------------------------------
@@ -76,22 +71,25 @@ module Svc {
                           ) \
       opcode 1
 
+    @ Enable / disable telemetry of a group on a specific port
     async command ENABLE_GROUP(
-                                portOut: FwIndexType    @< Port to configure
+                                section: FwIndexType    @< section grouping to configure
                                 tlmGroup: FwChanIdType  @< Group Level
                                 enable: Fw.Enabled      @< Active Sending Group
                               ) \
       opcode 2
     
+    @ Force telemetering a group on a port, even if disabled
     async command FORCE_GROUP(
-                                    portOut: FwIndexType    @< Port to configure
+                                    section: FwIndexType    @< section grouping
                                     tlmGroup: FwChanIdType  @< Group Level
                                     enable: Fw.Enabled      @< Active Sending Group
                                   ) \
       opcode 3
 
+    @ Set Min and Max Deltas between successive packets
     async command SET_GROUP_DELTAS(
-                                    portOut: FwIndexType    @< Port to configure
+                                    section: FwIndexType    @< section grouping
                                     tlmGroup: FwChanIdType  @< Group Level
                                     rateLogic: RateLogic    @< Rate Logic
                                     minDelta: U32
@@ -152,13 +150,6 @@ module Svc {
 
     @ Telemetry send level
     telemetry SendLevel: FwChanIdType id 0
-
-    # ----------------------------------------------------------------------
-    # Params
-    # ----------------------------------------------------------------------
-  
-    array ForceConfigurations = [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS] Fw.Active default Fw.Active.ACTIVE
-    param FORCE_OUT: ForceConfigurations
   }
 
 }
