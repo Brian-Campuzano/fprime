@@ -79,6 +79,11 @@ TEST(TestNominal, configuredTelemetryGroupsTests) {
     Svc::TlmPacketizerTester tester;
     tester.configuredTelemetryGroupsTests();
 }
+TEST(TestNominal, advancedControlGroupTests) {
+    TEST_CASE(100.1.10, "Control enable sections and groups");
+    Svc::TlmPacketizerTester tester;
+    tester.advancedControlGroupTests();
+}
 
 int main(int argc, char* argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

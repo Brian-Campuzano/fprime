@@ -95,18 +95,29 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                              U32 id                     /*!< The packet ID*/
                              ) override;
 
-    //! Handler implementation for command ENABLE_GROUP
-    void ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+    //! Handler implementation for command ENABLE_SECTION
+    void ENABLE_SECTION_cmdHandler(FwOpcodeType opCode,    //!< The opcode
                                  U32 cmdSeq,             //!< The command sequence number
                                  FwIndexType section,    //!< Section to configure
+                                 Fw::Enabled enable      //!< Active Sending Group
+                                 ) override;
+
+    //! Handler implementation for command ENABLE_GROUP
+    //!
+    //! Enable / disable telemetry of a group on a section
+    void ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+                                 U32 cmdSeq,             //!< The command sequence number
+                                 FwIndexType section,    //!< section grouping to configure
                                  FwChanIdType tlmGroup,  //!< Group Level
                                  Fw::Enabled enable      //!< Active Sending Group
                                  ) override;
 
+
     //! Handler implementation for command FORCE_GROUP
-    void FORCE_SECTION_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+    void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
                                   U32 cmdSeq,             //!< The command sequence number
                                   FwIndexType section,    //!< Section to configure
+                                  FwChanIdType tlmGroup,  //!< Group Level
                                   Fw::Enabled enable      //!< Active Sending Group
                                   ) override;
 
@@ -179,13 +190,13 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
    
     struct GroupConfig {
         Fw::Enabled enabled = Fw::Enabled::ENABLED;
+        Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
         TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
         U32 min = 0;                //!< Default for Backwards Compatible Behavior
         U32 max = 0;       //!< Default for Backwards Compatible Behavior
     } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
     Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
-    Fw::Enabled m_forceEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
 
     struct PktSendCounters {
         U32 prevSentCounter = 0xFFFFFFFF;

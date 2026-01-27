@@ -956,27 +956,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->m_primaryTestLock = false;
     Fw::Time time;
     Fw::TlmBuffer buffer;
-    this->sendCmd_SET_LEVEL(0, 0, 0);
-    this->component.doDispatch();
     
-    // 1st Channel (Pkt 1, 2, 4)
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(0xFFFF)));
-    this->invoke_to_TlmRecv(0, 10, time, buffer);
-
-    // T = -1 (Check to see that setting level 0 does not emit packets)
-    this->invoke_to_Run(0, 0);
-    this->component.doDispatch();
-
-    ASSERT_FROM_PORT_HISTORY_SIZE(0);
-    ASSERT_from_PktSend_SIZE(0);
-
-    this->clearHistory();
-    
-    // time.set(100, 1000);
-
-    // Arguments: opCode, cmdSeq, section, tlmGroup, minDelta, maxDelta
-    
-    // Set level to 3 to enable all levels
+    // Set level to high to enable all levels
     this->sendCmd_SET_LEVEL(0, 0, 10);
     this->component.doDispatch();    
     
@@ -996,8 +977,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
     this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 1, 2, Fw::Enabled::ENABLED); // SILENCED will not emit packet even while enabled
-    this->component.doDispatch();
     
     this->clearHistory();
 
@@ -1007,13 +986,11 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
     this->component.doDispatch();
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 3, Fw::Enabled::DISABLED);
+
+    this->sendCmd_ENABLE_SECTION(0, 0, 2, Fw::Enabled::ENABLED);    // Disable telemetry on section 2
     this->component.doDispatch();
 
-    this->sendCmd_FORCE_SECTION(0, 0, 0, Fw::Enabled::ENABLED);    // Force telemetry on section 0 for all groups, regardless if disabled
-    this->component.doDispatch();
-
-    // Disable output on section 2
+    // Disable output on section 2 via port invocation
     this->invoke_to_controlIn(0, 2, Fw::Enabled::DISABLED);
     this->component.doDispatch();
     
@@ -1021,12 +998,12 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     /*
     Configuration:
-    Port 0 Gorup 1: 3, 15           MIN 3
-    Port 1 Group 1: 2, 14           MIN 2
-    Port 0 Group 2: 1, 4, 13, 16.   MIN 4, MAX 12
-    Port 1 Group 3: 0, 7, 12, 18.   MIN 0, MAX 7
-    Port 0 Group 3: 6, 18.          MAX 6
-    Port 1 group 2 Ignored
+    Section 0 Gorup 1: 3, 15           MIN 3
+    Section 1 Group 1: 2, 14           MIN 2
+    Section 0 Group 2: 1, 4, 13, 16.   MIN 4, MAX 12
+    Section 1 Group 3: 0, 7, 12, 18.   MIN 0, MAX 7
+    Section 0 Group 3: 6, 18.          MAX 6
+    Section 1 group 2 Ignored
     */
 
     /*
@@ -1044,23 +1021,23 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     T=12 Tests updating packets 1, 2, and 4. Packet 4 on is emitted since it is updated after MIN and before MAX. Packets 1 and 2 are updated after MIN and may also be at MAX, which is then emitted.
 
 
-    Packet Updates  1,2,4   1,2,3                                                                                   1,2,4    
-                    V       V                                                                                       V      
-                    T=0     T=1     T=2     T=3     T=4     T=5     T=6     T=7     T=8     T=9     T=10    T=11    T=12    
-                    
-    (Bass Clef)     -|-------------------------------|-------------------------------|-------------------------------|-
-    Port 0 Group 1   ●                       ●       |                               |                               ● 
-    Port 1 Group 1  -●---------------●---------------|-------------------------------|-------------------------------●-
-    Port 0 Group 2   ●       ●                       ●                               |                               ● 
-    Port 1 Group 3  -●-------------------------------|-----------------------●-------|-------------------------------●-
-    Port 0 Group 3   ●                               |               ●               |                               ● 
-    Port 1 Group 2  -|-------------------------------|-------------------------------|-------------------------------|-
-                     |                               |                               |                               | 
-                    -|-------------------------------|-------------------------------|-------------------------------|-
-                             |
-                             Note: Packets 2 and 3 are updated and have their own independent counters! 
+    Packet Updates     1,2,4   1,2,3                                                                                   1,2,4    
+                       V       V                                                                                       V      
+                       T=0     T=1     T=2     T=3     T=4     T=5     T=6     T=7     T=8     T=9     T=10    T=11    T=12    
+                       
+    (Bass Clef)        -|-------------------------------|-------------------------------|-------------------------------|-
+    Section 0 Group 1   ●                       ●       |                               |                               ● 
+    Section 1 Group 1  -●---------------●---------------|-------------------------------|-------------------------------●-
+    Section 0 Group 2   ●       ●                       ●                               |                               ● 
+    Section 1 Group 3  -●-------------------------------|-----------------------●-------|-------------------------------●-
+    Section 0 Group 3   ●                               |               ●               |                               ● 
+    Section 1 Group 2  -|-------------------------------|-------------------------------|-------------------------------|-
+                        |                               |                               |                               | 
+                       -|-------------------------------|-------------------------------|-------------------------------|-
+                                |
+                                Note: Packets 2 and 3 are updated and have their own independent counters! 
     
-    Expected Output: 5       1       1       1       1       0       1       1       0       0       0       0       5
+    Expected Output:    5       1       1       1       1       0       1       1       0       0       0       0       5
     */
 
         
@@ -1107,6 +1084,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     ASSERT_FROM_PORT_HISTORY_SIZE(5);
     ASSERT_from_PktSend_SIZE(5);
+    
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
     // construct the packet buffers and make sure they are correct
 
@@ -1175,6 +1160,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
+
     // Pkt 3
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -1192,6 +1185,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
+    
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
     // Pkt 1
     comBuff.resetSer();
@@ -1215,6 +1216,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
+
     // Pkt 1 on Port 0
     // comBuff unchanged since this->m_testTime is the same
     ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
@@ -1227,6 +1236,15 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
+
+
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 3);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
     // Pkt 2 on Port 0
     comBuff.resetSer();
@@ -1258,6 +1276,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 3);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 1);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
+
     // Pkt 4 on Port 1 (Unchanged since T = 0)
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -1278,6 +1304,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 3);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 2);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 2);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
+
     // Pkt 4 on Port 0 (Unchanged since T = 0)
     ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
 
@@ -1290,6 +1324,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     
         ASSERT_FROM_PORT_HISTORY_SIZE(0);
         ASSERT_from_PktSend_SIZE(0);
+
+        // Packet Location Indices (Checking proper Section, Group)
+        ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
+        ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
+        ASSERT_EQ(this->m_portOutInvokes[0][2], 3);
+        ASSERT_EQ(this->m_portOutInvokes[1][3], 2);
+        ASSERT_EQ(this->m_portOutInvokes[0][3], 2);
+        ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
     }
 
     buffer.resetSer();
@@ -1304,6 +1346,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     
     ASSERT_FROM_PORT_HISTORY_SIZE(5);
     ASSERT_from_PktSend_SIZE(5);
+
+    // Packet Location Indices (Checking proper Section, Group)
+    ASSERT_EQ(this->m_portOutInvokes[0][1], 3);
+    ASSERT_EQ(this->m_portOutInvokes[1][1], 3);
+    ASSERT_EQ(this->m_portOutInvokes[0][2], 4);
+    ASSERT_EQ(this->m_portOutInvokes[1][3], 3);
+    ASSERT_EQ(this->m_portOutInvokes[0][3], 3);
+    ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
     // Pkt 1
     comBuff.resetSer();
@@ -1344,11 +1394,105 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));   // Port 1
 }
 
+//! Configure telemetry enable logic
+//!
+void TlmPacketizerTester ::advancedControlGroupTests(void) {
+    this->component.setPacketList(packetList2, ignore, 4);
+    this->m_primaryTestLock = false;
+    Fw::Time time;
+    Fw::TlmBuffer buffer;
+
+    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(1)));
+    // this->invoke_to_TlmRecv(0, 10, time, buffer);
+
+    this->sendCmd_SET_LEVEL(0, 0, 1);
+    this->component.doDispatch();
+
+    // Send a packet every time the port is invoked.
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 0);
+    this->component.doDispatch();
+
+    this->clearHistory();
+
+    // Expect Packet Default Enabled
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+    this->clearHistory();
+
+    // Disable this group on section 0 (primary)
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    // Expect No Packets
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(0);
+    ASSERT_from_PktSend_SIZE(0);
+
+    // Enable group on section, but disable section
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    this->sendCmd_ENABLE_SECTION(0, 0, 0, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    // Expect No Packets
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(0);
+    ASSERT_from_PktSend_SIZE(0);
+
+    // Enable Section by Port Invocation
+    this->sendCmd_ENABLE_SECTION(0, 0, 0, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    this->invoke_to_controlIn(0, 0, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    // Expect A Packet
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+    this->clearHistory();
+
+    // Disable section by port invocation, but Send Command Force Section
+    this->invoke_to_controlIn(0, 0, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    this->sendCmd_FORCE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
+    this->component.doDispatch();
+    // Expect A Packet
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+    this->clearHistory();
+    
+    // Disable group, but keep force group command active
+    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    // Expect A Packet
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(1);
+    ASSERT_from_PktSend_SIZE(1);
+    this->clearHistory();
+
+    // Disable Force Group, with Group Disabled and Section Disabled
+    this->sendCmd_FORCE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    // Expect No Packets
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+    ASSERT_FROM_PORT_HISTORY_SIZE(0);
+    ASSERT_from_PktSend_SIZE(0);
+    this->clearHistory();
+}
+
 // ----------------------------------------------------------------------
 // Handlers for typed from ports
 // ----------------------------------------------------------------------
 
 void TlmPacketizerTester ::from_PktSend_handler(const FwIndexType portNum, Fw::ComBuffer& data, U32 context) {
+    this->m_portOutInvokes[portNum / (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)][portNum % (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)]++;
     if (this->m_primaryTestLock && portNum > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP * 1) {
         return;
     }
@@ -1426,5 +1570,13 @@ void TlmPacketizerTester ::initComponents() {
     this->init();
     this->component.init(QUEUE_DEPTH, INSTANCE);
 }
+
+void TlmPacketizerTester ::resetCounter(void) {
+    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
+        for (FwChanIdType group = 0; group < MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+            this->m_portOutInvokes[section][group] = 0;
+        };
+    }
+};
 
 }  // end namespace Svc

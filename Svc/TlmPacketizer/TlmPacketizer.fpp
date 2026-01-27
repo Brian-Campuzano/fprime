@@ -79,20 +79,28 @@ module Svc {
                           ) \
       opcode 1
 
-    @ Enable / disable telemetry of a group on a specific port
+    @ Enable / disable telemetry of a group on a section
+    async command ENABLE_SECTION(
+                                section: FwIndexType    @< section grouping to configure
+                                enable: Fw.Enabled      @< Active Sending Group
+                              ) \
+      opcode 2
+
+        @ Enable / disable telemetry of a group on a section
     async command ENABLE_GROUP(
                                 section: FwIndexType    @< section grouping to configure
                                 tlmGroup: FwChanIdType  @< Group Level
                                 enable: Fw.Enabled      @< Active Sending Group
                               ) \
-      opcode 2
+      opcode 3
     
-    @ Force telemetering a group on a port, even if disabled
-    async command FORCE_SECTION(
+    @ Force telemetering a group on a section, even if disabled
+    async command FORCE_GROUP(
                                     section: FwIndexType    @< section grouping
+                                    tlmGroup: FwChanIdType  @< Group Level
                                     enable: Fw.Enabled      @< Active Sending Group
                                   ) \
-      opcode 3
+      opcode 4
 
     @ Set Min and Max Deltas between successive packets
     async command SET_GROUP_DELTAS(
@@ -102,7 +110,7 @@ module Svc {
                                     minDelta: U32
                                     maxDelta: U32
                                   ) \
-      opcode 4
+      opcode 5
 
     
 
