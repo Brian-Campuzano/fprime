@@ -46,6 +46,12 @@ TlmPacketizer ::TlmPacketizer(const char* const compName)
         this->m_fillBuffers[buffer].requested = false;
         this->m_sendBuffers[buffer].updated = false;
     }
+
+    // clear enabled sections
+    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
+        this->m_sectionEnabled[section] = Fw::Enabled::ENABLED;
+        this->m_forceEnabled[section] = Fw::Enabled::DISABLED;
+    }
 }
 
 TlmPacketizer ::~TlmPacketizer() {}
@@ -114,7 +120,7 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
     this->m_startLevel = startLevel;
 
     // enable / disable appropriate groups
-    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS; section++) {
+    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
         for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
             this->m_groupConfigs[section][group].enabled = group <= this->m_startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
         }
@@ -364,7 +370,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
 
         // Update per port group flags
         if (this->m_sendBuffers[pkt].updated == true) {
-            for (FwIndexType port = 0; port < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS; port++) {
+            for (FwIndexType port = 0; port < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; port++) {
                 this->m_packetFlags[port][pkt].updateFlag = true;
             }
             this->m_sendBuffers[pkt].updated = false;
@@ -377,12 +383,11 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
         FwChanIdType entryGroup = this->m_sendBuffers[pkt].level;
         
         // Iterate through output prioritys
-        for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS; section++)
+        for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++)
         {
             FwIndexType outIndex = static_cast<FwIndexType>(section * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1) + pkt);
             if (not this->isConnected_PktSend_OutputPort(outIndex))
             {
-                printf("SKIPPED PACKET %d\n", pkt);
                 continue;
             }
 
@@ -404,7 +409,6 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     // If counter is less than delta min
                     } else if (pktEntryFlags.prevSentCounter < entryGroupConfig.min) {
                         // Keep flag true but do not send.
-
                         continue;
                     }
                 }
@@ -417,7 +421,8 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     pktEntryFlags.updateFlag = true;
                 }
                 
-                if (not (entryGroupConfig.enabled or entryGroupConfig.forceEnabled) or 
+                if (not ((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or 
+                         this->m_forceEnabled[section] == Fw::Enabled::ENABLED) or 
                     entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) {
                     pktEntryFlags.updateFlag = false;
                 }
@@ -444,6 +449,14 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
     }
 }
 
+void TlmPacketizer ::controlIn_handler(FwIndexType portNum, FwIndexType section, const Fw::Enabled& enabled) {
+    if (0 <= section && section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS) {
+        this->m_sectionEnabled[section] = enabled;
+    } else {
+        this->log_WARNING_LO_SectionUnconfigurable(section, enabled);
+    }
+}
+
 void TlmPacketizer ::pingIn_handler(const FwIndexType portNum, U32 key) {
     // return key
     this->pingOut_out(0, key);
@@ -458,7 +471,7 @@ void TlmPacketizer ::SET_LEVEL_cmdHandler(const FwOpcodeType opCode, const U32 c
     if (level > this->m_maxLevel) {
         this->log_WARNING_LO_MaxLevelExceed(level, this->m_maxLevel);
     }
-    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS; section++) {
+    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
         for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
             this->m_groupConfigs[section][group].enabled = group <= this->m_startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
         }
@@ -505,15 +518,14 @@ void TlmPacketizer ::ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 
-void TlmPacketizer ::FORCE_GROUP_cmdHandler(FwOpcodeType opCode,
+void TlmPacketizer ::FORCE_SECTION_cmdHandler(FwOpcodeType opCode,
                                             U32 cmdSeq,
                                             FwIndexType section,
-                                            FwChanIdType tlmGroup,
                                             Fw::Enabled enable) {
-    if (section > NUM_PKTSEND_OUTPUT_PORTS or tlmGroup > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP) {
+    if (section > NUM_PKTSEND_OUTPUT_PORTS) {
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
     }
-    this->m_groupConfigs[section][tlmGroup].forceEnabled = enable;
+    this->m_forceEnabled[section] = enable;
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 

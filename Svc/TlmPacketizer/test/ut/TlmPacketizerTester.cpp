@@ -988,9 +988,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
     this->component.doDispatch();
 
-    // Disable on Port 2
-    this->sendCmd_ENABLE_GROUP(0, 0, 2, 1, Fw::Enabled::DISABLED);
-    this->component.doDispatch();
     this->clearHistory();
 
     // Group 2
@@ -1002,8 +999,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->sendCmd_ENABLE_GROUP(0, 0, 1, 2, Fw::Enabled::ENABLED); // SILENCED will not emit packet even while enabled
     this->component.doDispatch();
     
-    this->sendCmd_ENABLE_GROUP(0, 0, 2, 2, Fw::Enabled::DISABLED);
-    this->component.doDispatch();
     this->clearHistory();
 
     // Group 3
@@ -1014,13 +1009,14 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->component.doDispatch();
     this->sendCmd_ENABLE_GROUP(0, 0, 0, 3, Fw::Enabled::DISABLED);
     this->component.doDispatch();
-    this->sendCmd_FORCE_GROUP(0, 0, 0, 3, Fw::Enabled::ENABLED);    // Force Group enables this group on port 0
-    this->component.doDispatch();
-    
-    this->sendCmd_ENABLE_GROUP(0, 0, 2, 3, Fw::Enabled::DISABLED);
-    this->component.doDispatch();
-    
 
+    this->sendCmd_FORCE_SECTION(0, 0, 0, Fw::Enabled::ENABLED);    // Force telemetry on section 0 for all groups, regardless if disabled
+    this->component.doDispatch();
+
+    // Disable output on section 2
+    this->invoke_to_controlIn(0, 2, Fw::Enabled::DISABLED);
+    this->component.doDispatch();
+    
     this->clearHistory();
 
     /*
@@ -1408,9 +1404,12 @@ void TlmPacketizerTester ::connectPorts() {
     // TlmGet
     this->connect_to_TlmGet(0, this->component.get_TlmGet_InputPort(0));
 
-    for (FwIndexType index = 0; index < NUM_CONFIGURABLE_TLMPACKETIZER_PORTS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
+    for (FwIndexType index = 0; index < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
         this->component.set_PktSend_OutputPort(index, this->get_from_PktSend(index));
     }
+
+    // controlIn
+    this->connect_to_controlIn(0, this->component.get_controlIn_InputPort(0));
 }
 
 void TlmPacketizerTester::textLogIn(const FwEventIdType id,          //!< The event ID

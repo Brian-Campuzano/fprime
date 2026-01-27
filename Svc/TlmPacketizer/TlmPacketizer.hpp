@@ -61,6 +61,12 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                      U32 context                /*!< The call order*/
                      ) override;
 
+    //! Handler implementation for controlIn
+    void controlIn_handler(FwIndexType portNum,        //!< The port number
+                           FwIndexType section,        //!< Section to enable (Primary, Secondary, etc...)
+                           const Fw::Enabled& enabled  //!< Enable / Disable Section
+                           ) override;
+
     //! Handler implementation for pingIn
     //!
     void pingIn_handler(const FwIndexType portNum, /*!< The port number*/
@@ -92,23 +98,22 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Handler implementation for command ENABLE_GROUP
     void ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
                                  U32 cmdSeq,             //!< The command sequence number
-                                 FwIndexType section,    //!< Port to configure
+                                 FwIndexType section,    //!< Section to configure
                                  FwChanIdType tlmGroup,  //!< Group Level
                                  Fw::Enabled enable      //!< Active Sending Group
                                  ) override;
 
     //! Handler implementation for command FORCE_GROUP
-    void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
-                                U32 cmdSeq,             //!< The command sequence number
-                                FwIndexType section,    //!< Port to configure
-                                FwChanIdType tlmGroup,  //!< Group Level
-                                Fw::Enabled enable      //!< Active Sending Group
-                                ) override;
+    void FORCE_SECTION_cmdHandler(FwOpcodeType opCode,    //!< The opcode
+                                  U32 cmdSeq,             //!< The command sequence number
+                                  FwIndexType section,    //!< Section to configure
+                                  Fw::Enabled enable      //!< Active Sending Group
+                                  ) override;
 
     //! Handler implementation for command SET_GROUP_DELTAS
     void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,                     //!< The opcode
                                      U32 cmdSeq,                              //!< The command sequence number
-                                     FwIndexType section,                     //!< Port to configure
+                                     FwIndexType section,                     //!< Section to configure
                                      FwChanIdType tlmGroup,                   //!< Group Level
                                      Svc::TlmPacketizer_RateLogic rateLogic,  //!< Rate Logic
                                      U32 minDelta,
@@ -174,16 +179,18 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
    
     struct GroupConfig {
         Fw::Enabled enabled = Fw::Enabled::ENABLED;
-        Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
         TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
         U32 min = 0;                //!< Default for Backwards Compatible Behavior
         U32 max = 0;       //!< Default for Backwards Compatible Behavior
-    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
+    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
+
+    Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
+    Fw::Enabled m_forceEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
 
     struct PktSendCounters {
         U32 prevSentCounter = 0xFFFFFFFF;
         bool updateFlag = false;
-    }  m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_PORTS][MAX_PACKETIZER_PACKETS]{};
+    }  m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
 
 }  // end namespace Svc

@@ -1,4 +1,9 @@
 module Svc {
+  port EnableSection (
+      section: FwIndexType @< Section to enable (Primary, Secondary, etc...)
+      enabled: Fw.Enabled @< Enable / Disable Section
+  )
+  
   @ A component for storing telemetry
   active component TlmPacketizer {
     enum RateLogic {
@@ -7,13 +12,16 @@ module Svc {
       ON_CHANGE_MIN,
       ON_CHANGE_MIN_AND_EVERY_MAX,
     }
+
     
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
 
     @ Packet send port
-    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_PORTS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)] Fw.Com
+    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)] Fw.Com
+
+    async input port controlIn: EnableSection
 
     @ Ping input port
     async input port pingIn: Svc.Ping
@@ -80,9 +88,8 @@ module Svc {
       opcode 2
     
     @ Force telemetering a group on a port, even if disabled
-    async command FORCE_GROUP(
+    async command FORCE_SECTION(
                                     section: FwIndexType    @< section grouping
-                                    tlmGroup: FwChanIdType  @< Group Level
                                     enable: Fw.Enabled      @< Active Sending Group
                                   ) \
       opcode 3
@@ -144,6 +151,14 @@ module Svc {
       id 4 \
       format "Could not find packet ID {}"
 
+    event SectionUnconfigurable(
+                                ection: FwIndexType @< The Section
+                                enable: Fw.Enabled @< Attempted Configuration
+                               ) \
+      severity warning low \
+      id 5 \
+      format "Section {} is unconfigurable and cannot be set to {}"
+    
     # ----------------------------------------------------------------------
     # Telemetry
     # ----------------------------------------------------------------------
