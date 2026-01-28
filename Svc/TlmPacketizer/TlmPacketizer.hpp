@@ -11,17 +11,16 @@
 #ifndef TlmPacketizer_HPP
 #define TlmPacketizer_HPP
 
+#include "Fw/Types/EnabledEnumAc.hpp"
 #include "Os/Mutex.hpp"
 #include "Svc/TlmPacketizer/TlmPacketizerComponentAc.hpp"
 #include "Svc/TlmPacketizer/TlmPacketizerTypes.hpp"
 #include "config/TlmPacketizerCfg.hpp"
-#include "Fw/Types/EnabledEnumAc.hpp"
 
 namespace Svc {
 
 class TlmPacketizer final : public TlmPacketizerComponentBase {
-
-  friend class TlmPacketizerTester;
+    friend class TlmPacketizerTester;
 
   public:
     // ----------------------------------------------------------------------
@@ -96,11 +95,11 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                              ) override;
 
     //! Handler implementation for command ENABLE_SECTION
-    void ENABLE_SECTION_cmdHandler(FwOpcodeType opCode,    //!< The opcode
-                                 U32 cmdSeq,             //!< The command sequence number
-                                 FwIndexType section,    //!< Section to configure
-                                 Fw::Enabled enable      //!< Active Sending Group
-                                 ) override;
+    void ENABLE_SECTION_cmdHandler(FwOpcodeType opCode,  //!< The opcode
+                                   U32 cmdSeq,           //!< The command sequence number
+                                   FwIndexType section,  //!< Section to configure
+                                   Fw::Enabled enable    //!< Active Sending Group
+                                   ) override;
 
     //! Handler implementation for command ENABLE_GROUP
     //!
@@ -112,14 +111,13 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                                  Fw::Enabled enable      //!< Active Sending Group
                                  ) override;
 
-
     //! Handler implementation for command FORCE_GROUP
     void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,    //!< The opcode
-                                  U32 cmdSeq,             //!< The command sequence number
-                                  FwIndexType section,    //!< Section to configure
-                                  FwChanIdType tlmGroup,  //!< Group Level
-                                  Fw::Enabled enable      //!< Active Sending Group
-                                  ) override;
+                                U32 cmdSeq,             //!< The command sequence number
+                                FwIndexType section,    //!< Section to configure
+                                FwChanIdType tlmGroup,  //!< Group Level
+                                Fw::Enabled enable      //!< Active Sending Group
+                                ) override;
 
     //! Handler implementation for command SET_GROUP_DELTAS
     void SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,                     //!< The opcode
@@ -187,13 +185,13 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     FwChanIdType m_startLevel;  //!< initial level for sending packets
     FwChanIdType m_maxLevel;    //!< maximum level in all packets
-   
+
     struct GroupConfig {
         Fw::Enabled enabled = Fw::Enabled::ENABLED;
         Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
         TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
-        U32 min = 0;                //!< Default for Backwards Compatible Behavior
-        U32 max = 0;       //!< Default for Backwards Compatible Behavior
+        U32 min = 0;  //!< Default for Backwards Compatible Behavior
+        U32 max = 0;  //!< Default for Backwards Compatible Behavior
     } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
     Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
@@ -201,7 +199,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     struct PktSendCounters {
         U32 prevSentCounter = 0xFFFFFFFF;
         bool updateFlag = false;
-    }  m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
+    } m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
 
 }  // end namespace Svc

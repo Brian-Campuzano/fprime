@@ -956,15 +956,15 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->m_primaryTestLock = false;
     Fw::Time time;
     Fw::TlmBuffer buffer;
-    
+
     // Set level to high to enable all levels
     this->sendCmd_SET_LEVEL(0, 0, 10);
-    this->component.doDispatch();    
-    
+    this->component.doDispatch();
+
     // Group 1
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 3, 3);
     this->component.doDispatch();
-    
+
     // Send every 5 on port 1
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
     this->component.doDispatch();
@@ -977,7 +977,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
     this->component.doDispatch();
-    
+
     this->clearHistory();
 
     // Group 3
@@ -987,18 +987,18 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
     this->component.doDispatch();
 
-    this->sendCmd_ENABLE_SECTION(0, 0, 2, Fw::Enabled::ENABLED);    // Disable telemetry on section 2
+    this->sendCmd_ENABLE_SECTION(0, 0, 2, Fw::Enabled::ENABLED);  // Disable telemetry on section 2
     this->component.doDispatch();
 
     // Disable output on section 2 via port invocation
     this->invoke_to_controlIn(0, 2, Fw::Enabled::DISABLED);
     this->component.doDispatch();
-    
+
     this->clearHistory();
 
     /*
     Configuration:
-    Section 0 Gorup 1: 3, 15           MIN 3
+    Section 0 Group 1: 3, 15           MIN 3
     Section 1 Group 1: 2, 14           MIN 2
     Section 0 Group 2: 1, 4, 13, 16.   MIN 4, MAX 12
     Section 1 Group 3: 0, 7, 12, 18.   MIN 0, MAX 7
@@ -1007,18 +1007,22 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     */
 
     /*
-    Music Testing!
-
+    clang-format off
+    
     T=0 Tests Updates of packets 1,2, and 4 for Groups 1,2, and 4. Updated Packets are emitted.
-    T=1 Tests Updates of packets 1,2, and 3. Packet 3 is emitted, while Packet 2 is not due to < MIN (Each packet has their own counter)
+    T=1 Tests Updates of packets 1,2, and 3. 
+        Packet 3 is emitted, while Packet 2 is not due to < MIN (Each packet has their own counter)
     T=2 Packet 1 emits after passing MIN (configured for port 1, group 1, updated at T=1)
     T=3 Packet 1 emits after passing MIN (configured for port 0, group 1, updated at T=1)
     T=4 Packet 2 emits after passing MIN (Received update at T=1)
-    T=4 Test updates packet 2 for group 2. This tests updating a packet when time = MIN, and should be emitted. (Packet 2 and 3 have their own counters)
+    T=4 Test updates packet 2 for group 2. 
+        This tests updating a packet when time = MIN, and should be emitted. (Packet 2 and 3 have their own counters)
     T=6 Packet 4 emits on port 1 after passing MAX (configured for port 1, group 3).
     T=7 Packet 4 emits on port 0 after passing MAX, even if it had received no updates.
     
-    T=12 Tests updating packets 1, 2, and 4. Packet 4 on is emitted since it is updated after MIN and before MAX. Packets 1 and 2 are updated after MIN and may also be at MAX, which is then emitted.
+    T=12 Tests updating packets 1, 2, and 4. 
+        Packet 4 on is emitted since it is updated after MIN and before MAX. 
+        Packets 1 and 2 are updated after MIN and may also be at MAX, which is then emitted.
 
 
     Packet Updates     1,2,4   1,2,3                                                                                   1,2,4    
@@ -1038,9 +1042,10 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
                                 Note: Packets 2 and 3 are updated and have their own independent counters! 
     
     Expected Output:    5       1       1       1       1       0       1       1       0       0       0       0       5
+    
+    clang-format on
     */
 
-        
     // 1st Channel (Pkt 1, 2, 4)
     buffer.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(1)));
@@ -1079,12 +1084,12 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     // run scheduler port to send packets
     // T = 0
     this->invoke_to_Run(0, 0);
-    
+
     this->component.doDispatch();
 
     ASSERT_FROM_PORT_HISTORY_SIZE(5);
     ASSERT_from_PktSend_SIZE(5);
-    
+
     // Packet Location Indices (Checking proper Section, Group)
     ASSERT_EQ(this->m_portOutInvokes[0][1], 1);
     ASSERT_EQ(this->m_portOutInvokes[1][1], 1);
@@ -1120,7 +1125,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
     ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));
-    
+
     // Pkt 4
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -1132,10 +1137,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));
     ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));
-    
-    this->clearHistory();
 
-    
+    this->clearHistory();
 
     // 2nd Channel (Pkt 1)
     buffer.resetSer();
@@ -1151,7 +1154,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     buffer.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(11)));
     this->invoke_to_TlmRecv(0, 67, time, buffer);
-
 
     // T = 1
     this->invoke_to_Run(0, 0);
@@ -1185,7 +1187,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
-    
+
     // Packet Location Indices (Checking proper Section, Group)
     ASSERT_EQ(this->m_portOutInvokes[0][1], 1);
     ASSERT_EQ(this->m_portOutInvokes[1][1], 2);
@@ -1206,7 +1208,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
 
     // Pkt 1 on Port 1
     ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
-    
+
     this->clearHistory();
 
     // T = 3
@@ -1233,10 +1235,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     // T = 4
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
-    
+
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
-
 
     // Packet Location Indices (Checking proper Section, Group)
     ASSERT_EQ(this->m_portOutInvokes[0][1], 2);
@@ -1264,7 +1265,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     // T = 5
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
-    
+
     // Not expecting any packets
     ASSERT_FROM_PORT_HISTORY_SIZE(0);
     ASSERT_from_PktSend_SIZE(0);
@@ -1272,7 +1273,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     // T = 6
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
-    
+
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
@@ -1296,11 +1297,11 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
 
     this->clearHistory();
-    
+
     // T = 7
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
-    
+
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
 
@@ -1321,7 +1322,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     for (U8 trial = 8; trial < 12; trial++) {
         this->invoke_to_Run(0, 0);
         this->component.doDispatch();
-    
+
         ASSERT_FROM_PORT_HISTORY_SIZE(0);
         ASSERT_from_PktSend_SIZE(0);
 
@@ -1339,11 +1340,11 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->invoke_to_TlmRecv(0, 10, time, buffer);
 
     this->clearHistory();
-    
+
     // T = 12
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
-    
+
     ASSERT_FROM_PORT_HISTORY_SIZE(5);
     ASSERT_from_PktSend_SIZE(5);
 
@@ -1365,8 +1366,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(22)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));   // Port 0
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));   // Port 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));  // Port 0
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));  // Port 1
 
     // Pkt 2
     comBuff.resetSer();
@@ -1379,8 +1380,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
-    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));   // Port 0
-    
+    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));  // Port 0
+
     // Pkt 4
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -1390,8 +1391,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(111)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
 
-    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));   // Port 0
-    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));   // Port 1
+    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));  // Port 0
+    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));  // Port 1
 }
 
 //! Configure telemetry enable logic
@@ -1465,7 +1466,7 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     ASSERT_FROM_PORT_HISTORY_SIZE(1);
     ASSERT_from_PktSend_SIZE(1);
     this->clearHistory();
-    
+
     // Disable group, but keep force group command active
     this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
     this->component.doDispatch();
@@ -1492,7 +1493,8 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
 // ----------------------------------------------------------------------
 
 void TlmPacketizerTester ::from_PktSend_handler(const FwIndexType portNum, Fw::ComBuffer& data, U32 context) {
-    this->m_portOutInvokes[portNum / (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)][portNum % (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)]++;
+    this->m_portOutInvokes[portNum / (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)]
+                          [portNum % (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)]++;
     if (this->m_primaryTestLock && portNum > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP * 1) {
         return;
     }
@@ -1548,7 +1550,8 @@ void TlmPacketizerTester ::connectPorts() {
     // TlmGet
     this->connect_to_TlmGet(0, this->component.get_TlmGet_InputPort(0));
 
-    for (FwIndexType index = 0; index < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
+    for (FwIndexType index = 0;
+         index < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
         this->component.set_PktSend_OutputPort(index, this->get_from_PktSend(index));
     }
 

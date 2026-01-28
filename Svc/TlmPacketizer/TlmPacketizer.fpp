@@ -160,7 +160,7 @@ module Svc {
       format "Could not find packet ID {}"
 
     event SectionUnconfigurable(
-                                ection: FwIndexType @< The Section
+                                section: FwIndexType @< The Section
                                 enable: Fw.Enabled @< Attempted Configuration
                                ) \
       severity warning low \

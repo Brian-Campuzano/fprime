@@ -11,9 +11,9 @@
 #ifndef TESTER_HPP
 #define TESTER_HPP
 
+#include <queue>
 #include "Svc/TlmPacketizer/TlmPacketizer.hpp"
 #include "TlmPacketizerGTestBase.hpp"
-#include <queue>
 
 namespace Svc {
 
@@ -124,7 +124,7 @@ class TlmPacketizerTester : public TlmPacketizerGTestBase {
     //! Initialize components
     //!
     void initComponents(void);
-    
+
     //! Reset Counter
     //!
     void resetCounter(void);
@@ -140,7 +140,7 @@ class TlmPacketizerTester : public TlmPacketizerGTestBase {
 
     Fw::Time m_testTime;  //!< store test time for packets
 
-    bool m_primaryTestLock{true}; //! Lock limited to entries from port 0 PktSend
+    bool m_primaryTestLock{true};  //! Lock limited to entries from port 0 PktSend
     U8 m_portOutInvokes[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
     // Svc::Queue m_portCalls{};
 };
