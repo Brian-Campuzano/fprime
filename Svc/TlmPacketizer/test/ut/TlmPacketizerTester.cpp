@@ -972,7 +972,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->clearHistory();
 
     // Group 2
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_AND_EVERY_MAX, 4, 12);
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 4, 12);
     this->component.doDispatch();
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
@@ -981,7 +981,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->clearHistory();
 
     // Group 3
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_AND_EVERY_MAX, 0, 7);
+    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 0, 7);
     this->component.doDispatch();
 
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);

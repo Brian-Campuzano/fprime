@@ -10,7 +10,7 @@ module Svc {
       SILENCED,
       EVERY_MAX,
       ON_CHANGE_MIN,
-      ON_CHANGE_MIN_AND_EVERY_MAX,
+      ON_CHANGE_MIN_OR_EVERY_MAX,
     }
 
     

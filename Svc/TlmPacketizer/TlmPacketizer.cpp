@@ -522,7 +522,8 @@ void TlmPacketizer ::ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,
                                              FwIndexType section,
                                              FwChanIdType tlmGroup,
                                              Fw::Enabled enable) {
-    if (section >= NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS or tlmGroup > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP) {
+    if ((0 <= section and section >= NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS) or 
+        tlmGroup > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP) {
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
@@ -550,9 +551,8 @@ void TlmPacketizer ::SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,
                                                  Svc::TlmPacketizer_RateLogic rateLogic,
                                                  U32 minDelta,
                                                  U32 maxDelta) {
-    if (section > NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS or 
-        tlmGroup > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP or 
-        minDelta > maxDelta) {
+    if (section >= NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS or 
+        tlmGroup > MAX_CONFIGURABLE_TLMPACKETIZER_GROUP) {
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
