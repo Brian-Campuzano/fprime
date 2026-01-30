@@ -810,8 +810,7 @@ void TlmPacketizerTester ::setPacketLevelTest() {
     ASSERT_EVENTS_LevelSet_SIZE(1);
     ASSERT_EVENTS_LevelSet(0, 1);
     ASSERT_TLM_SIZE(1);
-    ASSERT_TLM_SendLevel_SIZE(1);
-    ASSERT_TLM_SendLevel(0, 1);
+    ASSERT_TLM_GroupConfigs_SIZE(1);
 
     // send the packets
     // first channel

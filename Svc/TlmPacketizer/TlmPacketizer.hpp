@@ -182,15 +182,9 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     TlmEntry* findBucket(FwChanIdType id);
 
-    Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
+    TlmPacketizer_SectionEnabled m_sectionEnabled{};
     
-    struct GroupConfig {
-        Fw::Enabled enabled = Fw::Enabled::ENABLED;
-        Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
-        TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
-        U32 min = 0;  //!< Default for Backwards Compatible Behavior
-        U32 max = 0;  //!< Default for Backwards Compatible Behavior
-    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{};
+    TlmPacketizer_SectionConfigs m_groupConfigs{};
 
     enum UpdateFlag : U8 {
         NEVER_UPDATED = 0,

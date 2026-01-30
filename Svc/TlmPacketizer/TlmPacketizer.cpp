@@ -115,30 +115,32 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
     }  // end packet list
     FW_ASSERT(maxLevel <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP, static_cast<FwAssertArgType>(maxLevel));
 
-    // enable / disable appropriate groups
-    for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
-        Fw::Enabled groupEnabled = group <= startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+
+    // Enable and set group configurations
+    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
         TlmPacketizer_RateLogic startRateLogic;
-        
-        for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
-            this->m_groupConfigs[section][group].enabled = groupEnabled;
-           
-            switch (PACKET_UPDATE_MODE) {
-                case PACKET_UPDATE_ON_CHANGE:
-                    startRateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
-                    break;                
-                case PACKET_UPDATE_ALWAYS:
-                    this->m_packetFlags[section][group].updateFlag = UpdateFlag::PAST;
-                    startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
-                    break;
-                case PACKET_UPDATE_AFTER_FIRST_CHANGE:
-                    startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
-                    break;
-                default:
-                    FW_ASSERT(0, PACKET_UPDATE_MODE);
-                    break;
-            }
-            this->m_groupConfigs[section][group].rateLogic = startRateLogic;
+        switch (PACKET_UPDATE_MODE) {
+            case PACKET_UPDATE_ON_CHANGE:
+                startRateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
+                break;                
+            case PACKET_UPDATE_ALWAYS:
+                for (PktSendCounters& pkt : this->m_packetFlags[section]) {
+                    // Trigger sending packets even if they're empty.
+                    pkt.updateFlag = UpdateFlag::PAST;
+                }
+                startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
+                break;
+            case PACKET_UPDATE_AFTER_FIRST_CHANGE:
+                startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
+                break;
+            default:
+                FW_ASSERT(0, PACKET_UPDATE_MODE);
+                break;
+        }
+        for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
+            Fw::Enabled groupEnabled = group <= startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+            this->m_groupConfigs[section][group].set_enabled(groupEnabled);
+            this->m_groupConfigs[section][group].set_rateLogic(startRateLogic);
         }
     }
 
@@ -385,7 +387,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
             const FwIndexType outIndex = static_cast<FwIndexType>(section * NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS +
                                                             static_cast<FwIndexType>(entryGroup)); 
             PktSendCounters& pktEntryFlags = this->m_packetFlags[section][pkt];
-            GroupConfig& entryGroupConfig = this->m_groupConfigs[section][entryGroup];
+            TlmPacketizer_GroupConfig& entryGroupConfig = this->m_groupConfigs[section][entryGroup];
             
             /* Base conditions for sending
             1. Output port is connected
@@ -400,9 +402,9 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
             if (pktEntryFlags.updateFlag == UpdateFlag::REQUESTED) {
                 sendOutFlag = true;
             } else {
-                if (not((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
-                        entryGroupConfig.forceEnabled == Fw::Enabled::ENABLED)) continue;
-                if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) continue;
+                if (not((entryGroupConfig.get_enabled() and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
+                        entryGroupConfig.get_forceEnabled() == Fw::Enabled::ENABLED)) continue;
+                if (entryGroupConfig.get_rateLogic() == Svc::TlmPacketizer_RateLogic::SILENCED) continue;
                 if (pktEntryFlags.updateFlag == UpdateFlag::NEVER_UPDATED) continue;    // Avoid No Data
             }
         
@@ -417,8 +419,8 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
             3. Packet sent counter at MIN
             */
             if (pktEntryFlags.updateFlag == UpdateFlag::NEW and 
-                entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::EVERY_MAX and
-                pktEntryFlags.prevSentCounter >= entryGroupConfig.min) {
+                entryGroupConfig.get_rateLogic() != Svc::TlmPacketizer_RateLogic::EVERY_MAX and
+                pktEntryFlags.prevSentCounter >= entryGroupConfig.get_min()) {
                 sendOutFlag = true;
             }
 
@@ -426,8 +428,8 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
             1. Group Logic includes checking MAX
             2. Packet set counter is at MAX
             */
-            if (entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN and
-                pktEntryFlags.prevSentCounter >= entryGroupConfig.max) {
+            if (entryGroupConfig.get_rateLogic() != Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN and
+                pktEntryFlags.prevSentCounter >= entryGroupConfig.get_max()) {
                 sendOutFlag = true;
             }
 
@@ -476,11 +478,10 @@ void TlmPacketizer ::SET_LEVEL_cmdHandler(const FwOpcodeType opCode, const U32 c
     }
     for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
         for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
-            this->m_groupConfigs[section][group].enabled =
-                group <= level ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+            this->m_groupConfigs[section][group].set_enabled(group <= level ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED);
         }
     }
-    this->tlmWrite_SendLevel(level);
+    this->tlmWrite_GroupConfigs(this->m_groupConfigs);
     this->log_ACTIVITY_HI_LevelSet(level);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
@@ -520,6 +521,7 @@ void TlmPacketizer ::ENABLE_SECTION_cmdHandler(FwOpcodeType opCode,
         return;
     }
     this->m_sectionEnabled[section] = enable;
+    this->tlmWrite_SectionEnabled(this->m_sectionEnabled);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 
@@ -533,7 +535,8 @@ void TlmPacketizer ::ENABLE_GROUP_cmdHandler(FwOpcodeType opCode,
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
-    this->m_groupConfigs[section][tlmGroup].enabled = enable;
+    this->m_groupConfigs[section][tlmGroup].set_enabled(enable);
+    this->tlmWrite_GroupConfigs(this->m_groupConfigs);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 
@@ -546,7 +549,8 @@ void TlmPacketizer ::FORCE_GROUP_cmdHandler(FwOpcodeType opCode,
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
-    this->m_groupConfigs[section][tlmGroup].forceEnabled = enable;
+    this->m_groupConfigs[section][tlmGroup].set_forceEnabled(enable);
+    this->tlmWrite_GroupConfigs(this->m_groupConfigs);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 
@@ -561,10 +565,11 @@ void TlmPacketizer ::SET_GROUP_DELTAS_cmdHandler(FwOpcodeType opCode,
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
-    GroupConfig& groupConfig = this->m_groupConfigs[section][tlmGroup];
-    groupConfig.rateLogic = rateLogic;
-    groupConfig.min = minDelta;
-    groupConfig.max = maxDelta;
+    TlmPacketizer_GroupConfig& groupConfig = this->m_groupConfigs[section][tlmGroup];
+    groupConfig.set_rateLogic(rateLogic);
+    groupConfig.set_min(minDelta);
+    groupConfig.set_max(maxDelta);
+    this->tlmWrite_GroupConfigs(this->m_groupConfigs);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 

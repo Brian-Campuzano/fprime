@@ -5,6 +5,10 @@ module Svc {
   )
   @ A component for storing telemetry
   active component TlmPacketizer {
+    # ----------------------------------------------------------------------
+    # Types
+    # ----------------------------------------------------------------------
+    
     enum RateLogic {
       SILENCED,
       EVERY_MAX,
@@ -12,22 +16,23 @@ module Svc {
       ON_CHANGE_MIN_OR_EVERY_MAX,
     }
     
-    # struct GroupConfig {
-    #   enabled: Fw.Enabled,
-    #   forceEnabled: Fw.Enabled,
-    #   rateLogic: RateLogic,
-    #   min: U32,
-    #   max: U32
-    # } default {
-    #   enabled = Fw.Enabled.ENABLED,
-    #   forceEnabled = Fw.Enabled.DISABLED,
-    #   rateLogic =  RateLogic.ON_CHANGE_MIN,
-    #   min = 0,
-    #   max = 0,
-    # }
+    struct GroupConfig {
+      enabled: Fw.Enabled       @< Enable / Disable Telemetry Output
+      forceEnabled: Fw.Enabled  @< Force Enable / Disable Telemetry Output
+      rateLogic: RateLogic      @< Rate Logic Configuration
+      min: U32                  @< Minimum Sched Ticks 
+      max: U32                  @< Maximum Sched Ticks
+    } default {
+      enabled = Fw.Enabled.ENABLED
+      forceEnabled = Fw.Enabled.DISABLED
+      rateLogic =  RateLogic.ON_CHANGE_MIN
+      min = 0
+      max = 0
+    }
 
-    # array GroupConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] GroupConfig
-    # array SectionConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] GroupConfigs
+    array GroupConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] GroupConfig
+    array SectionConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] GroupConfigs
+    array SectionEnabled = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] Fw.Enabled default Fw.Enabled.ENABLED
 
     # ----------------------------------------------------------------------
     # General ports
@@ -188,8 +193,8 @@ module Svc {
     # ----------------------------------------------------------------------
 
     @ Telemetry send level
-    telemetry SendLevel: FwChanIdType id 0 
-    # telemetry GroupConfigs: SectionConfigs id 0
+    telemetry GroupConfigs: SectionConfigs id 0
+    telemetry SectionEnabled: SectionEnabled id 1
 
   }
 
