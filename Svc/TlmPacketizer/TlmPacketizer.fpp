@@ -3,7 +3,6 @@ module Svc {
       section: FwIndexType @< Section to enable (Primary, Secondary, etc...)
       enabled: Fw.Enabled @< Enable / Disable Section
   )
-  
   @ A component for storing telemetry
   active component TlmPacketizer {
     enum RateLogic {
@@ -12,10 +11,24 @@ module Svc {
       ON_CHANGE_MIN,
       ON_CHANGE_MIN_OR_EVERY_MAX,
     }
-
-    constant NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS = MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1
-
     
+    # struct GroupConfig {
+    #   enabled: Fw.Enabled,
+    #   forceEnabled: Fw.Enabled,
+    #   rateLogic: RateLogic,
+    #   min: U32,
+    #   max: U32
+    # } default {
+    #   enabled = Fw.Enabled.ENABLED,
+    #   forceEnabled = Fw.Enabled.DISABLED,
+    #   rateLogic =  RateLogic.ON_CHANGE_MIN,
+    #   min = 0,
+    #   max = 0,
+    # }
+
+    # array GroupConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] GroupConfig
+    # array SectionConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] GroupConfigs
+
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
@@ -110,8 +123,8 @@ module Svc {
                                     section: FwIndexType    @< Section grouping
                                     tlmGroup: FwChanIdType  @< Group Identifier
                                     rateLogic: RateLogic    @< Rate Logic
-                                    minDelta: U32
-                                    maxDelta: U32
+                                    minDelta: U32           @< Minimum Sched Ticks to send packets on updates
+                                    maxDelta: U32           @< Maximum Sched Ticks to send packets
                                   ) \
       opcode 5
 
@@ -175,7 +188,9 @@ module Svc {
     # ----------------------------------------------------------------------
 
     @ Telemetry send level
-    telemetry SendLevel: FwChanIdType id 0
+    telemetry SendLevel: FwChanIdType id 0 
+    # telemetry GroupConfigs: SectionConfigs id 0
+
   }
 
 }

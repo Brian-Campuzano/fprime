@@ -113,10 +113,10 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
         }
 
     }  // end packet list
-    FW_ASSERT(maxLevel <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP, maxLevel);
+    FW_ASSERT(maxLevel <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP, static_cast<FwAssertArgType>(maxLevel));
 
     // enable / disable appropriate groups
-    for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+    for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
         Fw::Enabled groupEnabled = group <= startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
         TlmPacketizer_RateLogic startRateLogic;
         
@@ -129,7 +129,8 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
                     break;                
                 case PACKET_UPDATE_ALWAYS:
                     this->m_packetFlags[section][group].updateFlag = UpdateFlag::PAST;
-                    [[fallthrough]]; // Intentional Fallthrough (Both are configured for EVERY_MAX)
+                    startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
+                    break;
                 case PACKET_UPDATE_AFTER_FIRST_CHANGE:
                     startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
                     break;
@@ -358,11 +359,6 @@ Fw::TlmValid TlmPacketizer ::TlmGet_handler(FwIndexType portNum,  //!< The port 
 void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
     FW_ASSERT(this->m_configured);
 
-    // Only write packets if connected
-    if (not this->isConnected_PktSend_OutputPort(0)) {
-        return;
-    }
-
     // lock mutex long enough to modify active telemetry buffer
     // so the data can be read without worrying about updates
     this->m_lock.lock();
@@ -379,38 +375,46 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
 
         // Iterate through output sections
         for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
-            if (this->m_sendBuffers[pkt].updated) {
+            // Packet is updated and not REQUESTED (Prevent Downgrading)
+            if (this->m_sendBuffers[pkt].updated and this->m_packetFlags[section][pkt].updateFlag != UpdateFlag::REQUESTED) {
                 this->m_packetFlags[section][pkt].updateFlag = UpdateFlag::NEW;
             }
 
             bool sendOutFlag = false;
 
-            const FwIndexType outIndex = static_cast<FwIndexType>(section * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1) +
+            const FwIndexType outIndex = static_cast<FwIndexType>(section * NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS +
                                                             static_cast<FwIndexType>(entryGroup)); 
             PktSendCounters& pktEntryFlags = this->m_packetFlags[section][pkt];
             GroupConfig& entryGroupConfig = this->m_groupConfigs[section][entryGroup];
             
             /* Base conditions for sending
             1. Output port is connected
-            2. The Section and Group in Section is enabled OR the Group in Section is force enabled
-            3. The rate logic is not SILENCED.
-            4. The packet has data (marked updated in the past or new)
+            2. The packet was requested (Override Checks).
+            
+            If the packet wasn't requested:
+            3. The Section and Group in Section is enabled OR the Group in Section is force enabled
+            4. The rate logic is not SILENCED.
+            5. The packet has data (marked updated in the past or new)
             */
             if (not this->isConnected_PktSend_OutputPort(outIndex)) continue;
-            if (not((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
-                    entryGroupConfig.forceEnabled == Fw::Enabled::ENABLED)) continue;
-            if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) continue;
-            if (pktEntryFlags.updateFlag == UpdateFlag::NEVER_UPDATED) continue;    // Avoid No Data
+            if (pktEntryFlags.updateFlag == UpdateFlag::REQUESTED) {
+                sendOutFlag = true;
+            } else {
+                if (not((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
+                        entryGroupConfig.forceEnabled == Fw::Enabled::ENABLED)) continue;
+                if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) continue;
+                if (pktEntryFlags.updateFlag == UpdateFlag::NEVER_UPDATED) continue;    // Avoid No Data
+            }
         
             // Update Counter, prevent overflow. 
-            if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF) {
+            if (pktEntryFlags.prevSentCounter < std::numeric_limits<U32>::max()) {
                 pktEntryFlags.prevSentCounter++;
             }
             
             /*
             1. Packet has been updated
             2. Group Logic includes checking MIN
-            3. Packet sent counter passed MIN
+            3. Packet sent counter at MIN
             */
             if (pktEntryFlags.updateFlag == UpdateFlag::NEW and 
                 entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::EVERY_MAX and
@@ -427,11 +431,6 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                 sendOutFlag = true;
             }
 
-            // Packet Requested
-            if (pktEntryFlags.updateFlag == UpdateFlag::REQUESTED) {
-                sendOutFlag = true;
-            }
-
             // Send under the following conditions:
             // 1. Packet received updates and it has been past delta min counts since last packet (min enabled)
             // 2. Packet has passed delta max counts since last packet (max enabled)
@@ -445,7 +444,7 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                     Fw::Time::SERIALIZED_SIZE);
                 Fw::SerializeStatus stat = buff.serializeFrom(this->m_sendBuffers[pkt].latestTime);
                 FW_ASSERT(Fw::FW_SERIALIZE_OK == stat, stat);
-                this->PktSend_out(outIndex, this->m_sendBuffers[pkt].buffer, 0);
+                this->PktSend_out(outIndex, this->m_sendBuffers[pkt].buffer, pktEntryFlags.prevSentCounter);
                 pktEntryFlags.prevSentCounter = 0;
                 pktEntryFlags.updateFlag = UpdateFlag::PAST;
             }
@@ -476,7 +475,7 @@ void TlmPacketizer ::SET_LEVEL_cmdHandler(const FwOpcodeType opCode, const U32 c
         this->log_WARNING_LO_MaxLevelExceed(level, MAX_CONFIGURABLE_TLMPACKETIZER_GROUP);
     }
     for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
-        for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+        for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
             this->m_groupConfigs[section][group].enabled =
                 group <= level ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
         }
@@ -486,7 +485,7 @@ void TlmPacketizer ::SET_LEVEL_cmdHandler(const FwOpcodeType opCode, const U32 c
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }
 
-void TlmPacketizer ::SEND_PKT_cmdHandler(FwOpcodeType opCode, U32 cmdSeq, U32 id, FwIndexType section) {
+void TlmPacketizer ::SEND_PKT_cmdHandler(const FwOpcodeType opCode, const U32 cmdSeq, const U32 id, const FwIndexType section) {
     FwChanIdType pkt = 0;
     for (pkt = 0; pkt < this->m_numPackets; pkt++) {
         if (this->m_fillBuffers[pkt].id == id) {

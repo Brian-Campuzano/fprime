@@ -152,7 +152,8 @@ void TlmPacketizerTester ::sendPacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // No recently sent packet 1. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -164,7 +165,8 @@ void TlmPacketizerTester ::sendPacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // No recently sent packet 2. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 }
 
 void TlmPacketizerTester ::sendPacketLevelsTest() {
@@ -220,7 +222,8 @@ void TlmPacketizerTester ::sendPacketLevelsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // No recently sent packet 1. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -232,7 +235,8 @@ void TlmPacketizerTester ::sendPacketLevelsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // No recently sent packet 2. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 }
 
 void TlmPacketizerTester ::updatePacketsTest() {
@@ -270,7 +274,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(0)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // No recently sent packet 1. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -282,7 +287,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(0)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // No recently sent packet 1. Context set to sent counter, so this will be at max value.
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     // second channel
 
@@ -309,7 +315,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 1 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -331,7 +338,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 1 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -353,7 +361,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(0)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 3
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(3));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -377,7 +386,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -399,7 +409,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     //** Update all the packets again with new values
 
@@ -423,7 +434,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 1 sent recently with a delta sched ticks of 4
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(4));
 
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -435,7 +447,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(1));
 
     // second channel
 
@@ -458,7 +471,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(550)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 1 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -479,7 +493,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(550)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(211)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 1 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -501,7 +516,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 3
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(3));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -523,7 +539,8 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(8649)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Packet 2 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 
     buff.resetSer();
     ts.add(1, 0);
@@ -544,8 +561,9 @@ void TlmPacketizerTester ::updatePacketsTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(34441)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(8649)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(65)));
-
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    
+    // Packet 2 sent recently with a delta sched ticks of 1
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(1));
 }
 
 void TlmPacketizerTester ::ignoreTest() {
@@ -583,7 +601,8 @@ void TlmPacketizerTester ::ignoreTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(0)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // First Packet 1 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -595,7 +614,8 @@ void TlmPacketizerTester ::ignoreTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(0)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(0)));
 
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // First Packet 2 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     // ignored channel
 
@@ -667,7 +687,8 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff1.serializeFrom(static_cast<U16>(15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff1.serializeFrom(static_cast<U8>(14)));
 
-    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(0));
+    // First Packet 1 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     Fw::ComBuffer comBuff2;
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
@@ -679,7 +700,8 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff2.serializeFrom(static_cast<U16>(1010)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff2.serializeFrom(static_cast<U8>(15)));
 
-    ASSERT_from_PktSend(1, comBuff2, static_cast<U32>(0));
+    // First Packet 2 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(1, comBuff2, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     // should not be any new packets
     this->clearHistory();
@@ -700,7 +722,8 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
     ASSERT_from_PktSend_SIZE(1);
-    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(0));
+    // Packet 1 Sent recently. Delta Sched Ticks = 2
+    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(2));
 
     // another packet
     this->clearHistory();
@@ -722,7 +745,8 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     this->invoke_to_Run(0, 0);
     this->component.doDispatch();
     ASSERT_from_PktSend_SIZE(1);
-    ASSERT_from_PktSend(0, comBuff2, static_cast<U32>(0));
+    // Packet 2 Sent recently. Delta Sched Ticks = 4
+    ASSERT_from_PktSend(0, comBuff2, static_cast<U32>(4));
 
     // Try to send invalid packet
     // send command to manually send a packet
@@ -839,37 +863,10 @@ void TlmPacketizerTester ::setPacketLevelTest() {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff1.serializeFrom(static_cast<U16>(0x15)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff1.serializeFrom(static_cast<U8>(0x14)));
 
-    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(0));
+    // First Packet 1 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(0, comBuff1, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     return;
-
-    ASSERT_FROM_PORT_HISTORY_SIZE(2);
-    ASSERT_from_PktSend_SIZE(2);
-
-    // construct the packet buffers and make sure they are correct
-
-    Fw::ComBuffer comBuff;
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
-              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(4)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(15)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(14)));
-
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
-
-    comBuff.resetSer();
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK,
-              comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(8)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(20)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U64>(1000000)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(1010)));
-    ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(15)));
-
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
 }
 
 void TlmPacketizerTester ::nonPacketizedChannelTest() {
@@ -1107,8 +1104,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(2)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));
+    // First Packet 1 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     // Pkt 2
     comBuff.resetSer();
@@ -1121,7 +1119,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
-    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));
+    // First Packet 2 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     // Pkt 4
     comBuff.resetSer();
@@ -1132,8 +1131,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(1)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
 
-    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));
-    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));
+    // First Packet 4 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
+    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     this->clearHistory();
 
@@ -1174,7 +1174,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<FwTlmPacketizeIdType>(12)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(this->m_testTime));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(11)));
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    
+    // First Packet 3 Send. Delta Sched Ticks = Max
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(std::numeric_limits<U32>::max()));
 
     this->clearHistory();
 
@@ -1203,8 +1205,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(22)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
-    // Pkt 1 on Port 1
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Pkt 1 on section 1
+    // Pkt 1 on section 1 sent recently with a delta of 2
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(2));
 
     this->clearHistory();
 
@@ -1223,9 +1226,10 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(this->m_portOutInvokes[0][3], 1);
     ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
-    // Pkt 1 on Port 0
+    // Pkt 1 on section 0
     // comBuff unchanged since this->m_testTime is the same
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Pkt 1 on section 0 sent recently with a delta of 3
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(3));
 
     this->clearHistory();
 
@@ -1255,7 +1259,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Pkt 2 on section 0 sent recently with a delta of 4
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(4));
 
     this->clearHistory();
 
@@ -1282,7 +1287,7 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(this->m_portOutInvokes[0][3], 2);
     ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
-    // Pkt 4 on Port 1 (Unchanged since T = 0)
+    // Pkt 4 on section 1 (Unchanged since T = 0)
     comBuff.resetSer();
     ASSERT_EQ(Fw::FW_SERIALIZE_OK,
               comBuff.serializeFrom(static_cast<FwPacketDescriptorType>(Fw::ComPacketType::FW_PACKET_PACKETIZED_TLM)));
@@ -1291,7 +1296,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(1)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Pkt 4 on section 0 sent recently with a delta of 6
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(6));
 
     this->clearHistory();
 
@@ -1310,8 +1316,9 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(this->m_portOutInvokes[0][3], 2);
     ASSERT_EQ(this->m_portOutInvokes[1][2], 0);
 
-    // Pkt 4 on Port 0 (Unchanged since T = 0)
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));
+    // Pkt 4 on section 1 (Unchanged since T = 0)
+    // Pkt 4 on section 1 sent recently with a delta of 7
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(7));
 
     this->clearHistory();
 
@@ -1363,8 +1370,10 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(22)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(3)));
 
-    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(0));  // Port 0
-    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(0));  // Port 1
+    // Pkt 1 on section 0 sent recently with a delta of 9
+    // Pkt 1 on section 1 sent recently with a delta of 10
+    ASSERT_from_PktSend(0, comBuff, static_cast<U32>(9));  // Section 0
+    ASSERT_from_PktSend(1, comBuff, static_cast<U32>(10));  // Section 1
 
     // Pkt 2
     comBuff.resetSer();
@@ -1377,7 +1386,8 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U16>(3)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U8>(4)));
 
-    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(0));  // Port 0
+    // Pkt 2 on section 0 sent recently with a delta of 8
+    ASSERT_from_PktSend(2, comBuff, static_cast<U32>(8));  // Section 0
 
     // Pkt 4
     comBuff.resetSer();
@@ -1388,8 +1398,10 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(111)));
     ASSERT_EQ(Fw::FW_SERIALIZE_OK, comBuff.serializeFrom(static_cast<U32>(2)));
 
-    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(0));  // Port 0
-    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(0));  // Port 1
+    // Pkt 4 on section 0 sent recently with a delta of 6
+    // Pkt 4 on section 1 sent recently with a delta of 5
+    ASSERT_from_PktSend(3, comBuff, static_cast<U32>(6));  // Section 0
+    ASSERT_from_PktSend(4, comBuff, static_cast<U32>(5));  // Section 1
 }
 
 //! Configure telemetry enable logic

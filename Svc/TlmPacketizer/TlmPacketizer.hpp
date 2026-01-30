@@ -91,8 +91,8 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Force a packet to be sent
     void SEND_PKT_cmdHandler(const FwOpcodeType opCode, /*!< The opcode*/
                              const U32 cmdSeq,          /*!< The command sequence number*/
-                             U32 id,                    /*!< The packet ID*/
-                             FwIndexType section        /*!< Section to emit packet*/
+                             const U32 id,              /*!< The packet ID*/
+                             const FwIndexType section  /*!< Section to emit packet*/
                              ) override;
 
     //! Handler implementation for command ENABLE_SECTION
@@ -190,7 +190,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
         TlmPacketizer_RateLogic rateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
         U32 min = 0;  //!< Default for Backwards Compatible Behavior
         U32 max = 0;  //!< Default for Backwards Compatible Behavior
-    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
+    } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS]{};
 
     enum UpdateFlag : U8 {
         NEVER_UPDATED = 0,
@@ -200,7 +200,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     };
 
     struct PktSendCounters {
-        U32 prevSentCounter = 0xFFFFFFFF; // Prevent Start up spam
+        U32 prevSentCounter = std::numeric_limits<U32>::max(); // Prevent Start up spam
         UpdateFlag updateFlag = UpdateFlag::NEVER_UPDATED;
     } m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
