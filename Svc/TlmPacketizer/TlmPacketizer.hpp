@@ -169,7 +169,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     // hash function for looking up telemetry channel
     FwChanIdType doHash(FwChanIdType id);
 
-    Os::Mutex m_lock;        //!< used to lock access to packet buffers
+    Os::Mutex m_lock;  //!< used to lock access to packet buffers
 
     bool m_configured;  //!< indicates a table has been passed and packets configured
 
@@ -183,7 +183,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     TlmEntry* findBucket(FwChanIdType id);
 
     TlmPacketizer_SectionEnabled m_sectionEnabled{};
-    
+
     TlmPacketizer_SectionConfigs m_groupConfigs{};
 
     enum UpdateFlag : U8 {
@@ -194,7 +194,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     };
 
     struct PktSendCounters {
-        U32 prevSentCounter = std::numeric_limits<U32>::max(); // Prevent Start up spam
+        U32 prevSentCounter = std::numeric_limits<U32>::max();  // Prevent Start up spam
         UpdateFlag updateFlag = UpdateFlag::NEVER_UPDATED;
     } m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
