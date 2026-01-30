@@ -987,9 +987,6 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
     this->component.doDispatch();
 
-    this->sendCmd_ENABLE_SECTION(0, 0, 2, Fw::Enabled::ENABLED);  // Disable telemetry on section 2
-    this->component.doDispatch();
-
     // Disable output on section 2 via port invocation
     this->invoke_to_controlIn(0, 2, Fw::Enabled::DISABLED);
     this->component.doDispatch();
@@ -1403,12 +1400,20 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     Fw::Time time;
     Fw::TlmBuffer buffer;
 
-    // ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(1)));
-    // this->invoke_to_TlmRecv(0, 10, time, buffer);
+    ASSERT_EQ(Fw::FW_SERIALIZE_OK, buffer.serializeFrom(static_cast<U32>(1)));
+    this->invoke_to_TlmRecv(0, 10, time, buffer);
 
     this->sendCmd_SET_LEVEL(0, 0, 1);
     this->component.doDispatch();
 
+    this->invoke_to_Run(0, 0);
+    this->component.doDispatch();
+
+    // Default ON_CHANGE Behavior
+    ASSERT_FROM_PORT_HISTORY_SIZE(3);
+    ASSERT_from_PktSend_SIZE(3);
+    this->clearHistory();
+    
     // Send a packet every time the port is invoked.
     this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 0);
     this->component.doDispatch();

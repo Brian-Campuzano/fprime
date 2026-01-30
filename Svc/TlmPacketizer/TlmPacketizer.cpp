@@ -47,7 +47,7 @@ TlmPacketizer ::TlmPacketizer(const char* const compName)
         this->m_sendBuffers[buffer].updated = false;
     }
 
-    // clear enabled sections
+    // enable sections
     for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
         this->m_sectionEnabled[section] = Fw::Enabled::ENABLED;
     }
@@ -113,15 +113,31 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
         }
 
     }  // end packet list
-
-    // save start level
-    this->m_startLevel = startLevel;
+    FW_ASSERT(this->m_maxLevel <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP, this->m_maxLevel);
 
     // enable / disable appropriate groups
-    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
-        for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
-            this->m_groupConfigs[section][group].enabled =
-                group <= this->m_startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+    for (FwChanIdType group = 0; group <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
+        Fw::Enabled groupEnabled = group <= startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+        TlmPacketizer_RateLogic startRateLogic;
+        
+        for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
+            this->m_groupConfigs[section][group].enabled = groupEnabled;
+           
+            switch (PACKET_UPDATE_MODE) {
+                case PACKET_UPDATE_ON_CHANGE:
+                    startRateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN;
+                    break;                
+                case PACKET_UPDATE_ALWAYS:
+                    this->m_packetFlags[section][group].updateFlag = UpdateFlag::PAST;
+                    [[fallthrough]]; // Intentional Fallthrough (Both are configured for EVERY_MAX)
+                case PACKET_UPDATE_AFTER_FIRST_CHANGE:
+                    startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX;
+                    break;
+                default:
+                    FW_ASSERT(0, PACKET_UPDATE_MODE);
+                    break;
+            }
+            this->m_groupConfigs[section][group].rateLogic = startRateLogic;
         }
     }
 
@@ -352,28 +368,9 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
     this->m_lock.lock();
     // copy buffers from fill side to send side
     for (FwChanIdType pkt = 0; pkt < this->m_numPackets; pkt++) {
-        if ((this->m_fillBuffers[pkt].updated) or (this->m_fillBuffers[pkt].requested)) {
-            this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt];
-            if (PACKET_UPDATE_ON_CHANGE == PACKET_UPDATE_MODE) {
-                this->m_fillBuffers[pkt].updated = false;
-            }
-            this->m_fillBuffers[pkt].requested = false;
-            // PACKET_UPDATE_AFTER_FIRST_CHANGE will be this case - updated flag will not be cleared
-        } else if ((PACKET_UPDATE_ALWAYS == PACKET_UPDATE_MODE) and
-                   (this->m_fillBuffers[pkt].level <= this->m_startLevel)) {
-            this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt];
-            this->m_sendBuffers[pkt].updated = true;
-        } else {
-            this->m_sendBuffers[pkt].updated = false;
-        }
-
-        // Update per port group flags
-        if (this->m_sendBuffers[pkt].updated == true) {
-            for (FwIndexType port = 0; port < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; port++) {
-                this->m_packetFlags[port][pkt].updateFlag = true;
-            }
-            this->m_sendBuffers[pkt].updated = false;
-        }
+        this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt];
+        this->m_fillBuffers[pkt].updated = false;
+        this->m_fillBuffers[pkt].requested = false;
     }
     this->m_lock.unLock();
 
@@ -383,52 +380,66 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
 
         // Iterate through output priority
         for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
-            FwIndexType outIndex = static_cast<FwIndexType>(section * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1) +
-                                                            static_cast<FwIndexType>(entryGroup));
-            if (not this->isConnected_PktSend_OutputPort(outIndex)) {
-                continue;
+            if (this->m_sendBuffers[pkt].updated or this->m_sendBuffers[pkt].requested) {
+                this->m_packetFlags[section][pkt].updateFlag = UpdateFlag::NEW;
             }
 
+            bool sendOutFlag = false;
+
+            FwIndexType outIndex = static_cast<FwIndexType>(section * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1) +
+                                                            static_cast<FwIndexType>(entryGroup)); 
             PktSendCounters& pktEntryFlags = this->m_packetFlags[section][pkt];
+            GroupConfig& entryGroupConfig = this->m_groupConfigs[section][entryGroup];
+            
+            /* Base conditions for sending
+            1. Output port is connected
+            2. The Section and Group in Section is enabled OR the Group in Section is force enabled
+            3. The rate logic is not SILENCED.
+            4. The packet has data (marked updated in the past or new)
+            */
+            if (not this->isConnected_PktSend_OutputPort(outIndex)) continue;
+            if (not((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
+                    entryGroupConfig.forceEnabled == Fw::Enabled::ENABLED)) continue;
+            if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) continue;
+            if (pktEntryFlags.updateFlag == UpdateFlag::NEVER_UPDATED) continue;    // Avoid No Data
+        
+            // Update Counter, prevent overflow
             if (pktEntryFlags.prevSentCounter < 0xFFFFFFFF) {
                 pktEntryFlags.prevSentCounter++;
             }
-
-            if (entryGroup <= MAX_CONFIGURABLE_TLMPACKETIZER_GROUP and not this->m_sendBuffers[pkt].requested) {
-                GroupConfig& entryGroupConfig = this->m_groupConfigs[section][entryGroup];
-
-                // If a packet in the group has been updated since last sent on section
-                if (pktEntryFlags.updateFlag) {
-                    // If delta min is disabled (Disable on change, Only send on Delta Max)
-                    if (entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::EVERY_MAX) {
-                        pktEntryFlags.updateFlag = false;
-
-                        // If counter is less than delta min
-                    } else if (pktEntryFlags.prevSentCounter < entryGroupConfig.min) {
-                        // Keep flag true but do not send.
-                        continue;
-                    }
-                }
-
-                // If Delta Max is configured and the send counter for this section and packet is greater than Delta Max
-                if (entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN and
-                    pktEntryFlags.prevSentCounter >= entryGroupConfig.max) {
-                    // Signal an update if counter exceeded max counts for current section
-                    pktEntryFlags.updateFlag = true;
-                }
-
-                if (not((entryGroupConfig.enabled and this->m_sectionEnabled[section] == Fw::Enabled::ENABLED) or
-                        entryGroupConfig.forceEnabled == Fw::Enabled::ENABLED) or
-                    entryGroupConfig.rateLogic == Svc::TlmPacketizer_RateLogic::SILENCED) {
-                    pktEntryFlags.updateFlag = false;
-                }
+            
+            /*
+            1. Packet has been updated
+            2. Group Logic includes checking MIN
+            3. Packet sent counter passed MIN
+            */
+            if (pktEntryFlags.updateFlag == UpdateFlag::NEW and 
+                entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::EVERY_MAX and
+                pktEntryFlags.prevSentCounter >= entryGroupConfig.min) {
+                sendOutFlag = true;
             }
+
+            /*
+            1. Group Logic includes checking MAX
+            2. Packet set counter is at MAX
+            */
+            if (entryGroupConfig.rateLogic != Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN and
+                pktEntryFlags.prevSentCounter >= entryGroupConfig.max) {
+                sendOutFlag = true;
+            }
+
+            // Packet Requested
+            if (this->m_sendBuffers[pkt].requested) {
+                sendOutFlag = true;
+            }
+
+            printf("PKT %d GROUP %d SECTION %d UPDATE %d FLAG %d\n", pkt + 1, entryGroup, section, pktEntryFlags.updateFlag, sendOutFlag);
             // Send under the following conditions:
             // 1. Packet received updates and it has been past delta min counts since last packet (min enabled)
             // 2. Packet has passed delta max counts since last packet (max enabled)
             // With the above, the group must be either enabled or force enabled.
             // 3. If the packet was requested.
-            if (pktEntryFlags.updateFlag) {
+            if (sendOutFlag) {
                 // serialize time into time offset in packet
                 Fw::ExternalSerializeBuffer buff(
                     &this->m_sendBuffers[pkt]
@@ -438,9 +449,10 @@ void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
                 FW_ASSERT(Fw::FW_SERIALIZE_OK == stat, stat);
                 this->PktSend_out(outIndex, this->m_sendBuffers[pkt].buffer, 0);
                 pktEntryFlags.prevSentCounter = 0;
-                pktEntryFlags.updateFlag = false;
+                pktEntryFlags.updateFlag = UpdateFlag::PAST;
             }
         }
+        this->m_sendBuffers[pkt].updated = false;
         this->m_sendBuffers[pkt].requested = false;
     }
 }

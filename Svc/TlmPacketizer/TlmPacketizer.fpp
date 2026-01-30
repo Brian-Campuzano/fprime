@@ -13,13 +13,15 @@ module Svc {
       ON_CHANGE_MIN_OR_EVERY_MAX,
     }
 
+    constant NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS = MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1
+
     
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
 
     @ Packet send port
-    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1)] Fw.Com
+    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] Fw.Com
 
     async input port controlIn: EnableSection
 

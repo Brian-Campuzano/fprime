@@ -196,9 +196,15 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
 
+    enum UpdateFlag : U8 {
+        NEVER_UPDATED = 0,
+        PAST = 1,
+        NEW = 2,
+    };
+
     struct PktSendCounters {
         U32 prevSentCounter = 0xFFFFFFFF;
-        bool updateFlag = false;
+        UpdateFlag updateFlag = UpdateFlag::NEVER_UPDATED;
     } m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
 
