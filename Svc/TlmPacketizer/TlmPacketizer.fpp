@@ -77,37 +77,38 @@ module Svc {
 
     @ Force a packet to be sent
     async command SEND_PKT(
-                            $id: U32 @< The packet ID
+                            $id: U32              @< The packet ID
+                            section: FwIndexType  @< Section to emit packet
                           ) \
       opcode 1
 
     @ Enable / disable telemetry of a group on a section
     async command ENABLE_SECTION(
-                                section: FwIndexType    @< section grouping to configure
-                                enable: Fw.Enabled      @< Active Sending Group
+                                section: FwIndexType    @< Section grouping to configure
+                                enable: Fw.Enabled      @< Section enabled or disabled
                               ) \
       opcode 2
 
         @ Enable / disable telemetry of a group on a section
     async command ENABLE_GROUP(
-                                section: FwIndexType    @< section grouping to configure
-                                tlmGroup: FwChanIdType  @< Group Level
-                                enable: Fw.Enabled      @< Active Sending Group
+                                section: FwIndexType    @< Section grouping to configure
+                                tlmGroup: FwChanIdType  @< Group Identifier
+                                enable: Fw.Enabled      @< Section enabled or disabled
                               ) \
       opcode 3
     
     @ Force telemetering a group on a section, even if disabled
     async command FORCE_GROUP(
-                                    section: FwIndexType    @< section grouping
-                                    tlmGroup: FwChanIdType  @< Group Level
-                                    enable: Fw.Enabled      @< Active Sending Group
+                                    section: FwIndexType    @< Section grouping
+                                    tlmGroup: FwChanIdType  @< Group Identifier
+                                    enable: Fw.Enabled      @< Section enabled or disabled
                                   ) \
       opcode 4
 
     @ Set Min and Max Deltas between successive packets
     async command SET_GROUP_DELTAS(
-                                    section: FwIndexType    @< section grouping
-                                    tlmGroup: FwChanIdType  @< Group Level
+                                    section: FwIndexType    @< Section grouping
+                                    tlmGroup: FwChanIdType  @< Group Identifier
                                     rateLogic: RateLogic    @< Rate Logic
                                     minDelta: U32
                                     maxDelta: U32

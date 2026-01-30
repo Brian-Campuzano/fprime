@@ -690,7 +690,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     ASSERT_from_PktSend_SIZE(0);
 
     // send command to manually send a packet
-    this->sendCmd_SEND_PKT(0, 12, 4);
+    this->sendCmd_SEND_PKT(0, 12, 4, 0);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketSent(0, 4);
@@ -712,7 +712,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
 
     // send command to manually send a packet
     this->clearHistory();
-    this->sendCmd_SEND_PKT(0, 12, 8);
+    this->sendCmd_SEND_PKT(0, 12, 8, 0);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketSent(0, 8);
@@ -727,7 +727,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     // Try to send invalid packet
     // send command to manually send a packet
     this->clearHistory();
-    this->sendCmd_SEND_PKT(0, 12, 20);
+    this->sendCmd_SEND_PKT(0, 12, 20, 0);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketNotFound(0, 20);

@@ -4,7 +4,7 @@
 
 The `Svc::TlmPacketizer` Component is used to store telemetry values written by other components. The values are stored in serialized form. TlmPacketizer differs from `Svc::TlmChan` in that it stores telemetry in defined packets instead of streaming the updates as they come. The defined packets are passed in as a table to the `setPacketList()` public method. When telemetry updates are passed to the component, they are placed at the offset in a packet buffer defined by the table. When the `run()` port is called, all the defined packets are sent to the output port with the most recent . This is meant to replace `Svc::TlmCham` for use cases where a more compact packet format is desired. The disadvantage is that all channels are pushed whether or not they have been updated.
 
-Uses can change the individual rates at which groups per group instance are outputted upon a `run()` port call. Groups are configured with a MIN number of `run()` invocations to emit updated telemetry, and a MAX number of `run()` invocations that shall output a packet if it exceeds MAX. Packets are evaluated individually and have a counter since last invocation. MIN and MAX logic are selectable, for users that desire only "on change" telemetry, MAX invocations between telemetry points, both, or none at all.
+Uses can change the individual rates at which groups per group instance are outputted upon a `run()` sched tick. Each group on each output section has independantly configurable telemetry resampling rates. Packets can be sent on change with a rate limiting enforced minimum number of ticks between updates. Or packets can be sent with at a guaranteed rate of a maximum number of ticks between updates. Packets are evaluated individually and have a counter since last invocation. MIN and MAX logic are selectable, for users that desire only "on change" telemetry, MAX invocations between telemetry points, both, or none at all.
 
 ## 2. Requirements
 
@@ -45,7 +45,7 @@ Telemetry Point: An emitted value.
 Telemetry Channel: A tagged type and identifier for emitting telemetry points.
 Telemetry Packets: A group of telemetry channels.
 Telemetry Group / Level: An identifier for a telemetry packet used to determine which packets get transmitted.
-Telemetry Section: A group of telemetry groups.
+Telemetry Section: A resampling of telemetry groups. Each Section typically is destined for a different destination (e.g. realtime downlink vs store & forward)
 
 #### 3.2 Functional Description
 
@@ -55,7 +55,7 @@ The implementation uses a hashing function to find the location of telemetry cha
 
 When a call to the `Run()` interface is called, the packet writes are locked and all the packets are copied to a second set of packets. Once the copy is complete, the packets writes are unlocked. The destination packet set gets updated with the current time tag and are sent out the `pktSend` port.
 
-Each telemetry group, depending on section and group configurations, are sent out on several indices of the `pktSend` port. As an example, a packet with group 1 with a TlmPacketizer configuration of 3 sections (0, 1, and 2), and 3 groups (0 and 3 inclusive), will be sent on 3 indices: 1, 5, and 9. Port invocations to `controlIn` or the command, `ENABLE_SECTION` are used to enable / disable each section, supporting downstream components that rely on different samplings of groups of telemetry. Each group instance is separately sampled from each other, allowing for individual rates per section and group.
+Each telemetry group, depending on section and group configurations, are sent out on several indices of the `pktSend` port. Since each section holds a continuous range of ports, a packet with group 1 with a TlmPacketizer configuration of 3 sections (0, 1, and 2), and a max group of 3 (0 and 3 inclusive), will be sent on 3 indices: 1, 5, and 9. Port invocations to `controlIn` or the command, `ENABLE_SECTION` are used to enable / disable each section, supporting downstream components that rely on different samplings of groups of telemetry. Each group instance is separately sampled from each other, allowing for individual rates per section and group.
 
 ### 3.3 Scenarios
 
@@ -65,9 +65,9 @@ Each telemetry group, depending on section and group configurations, are sent ou
 
 The `Svc::TlmPacketizer` is configurable to have multiple `PktSend` group outputs using the fpp constant, `MAX_CONFIGURABLE_TLMPACKETIZER_GROUP`. Doing so allows each packet group have different configurations for each `PktSend` output section.
 
-`PktSend` output is ordered by [section][group], where within each section telemetry groups (inclusive) are emitted. Each group within each section are separately sampled, and have their own configuration rates and logic independent from each other. 
+`PktSend` output is ordered by `[section][group]`, where within each section telemetry groups are emitted. Each group within each section are separately sampled, and have their own configuration rates and logic independent from each other.
 
-Each group is configured with min/max delta parameters, as well as a logic gate determining its output rate behavior. Min Delta is the least number of `Run()` invocations between successive packets before an updated packet is allowed to be sent. Updated packets will not be sent until their counter reaches Min Delta. This mitigates against telemetry spam and allows users to configure faster updated and sent telemetry compared to updates that don't require to be as frequently updated. Max Delta is the maximum number of `Run()` invocations between successive packets. Upon reaching this counter, the packet would be sent, regardless of change.
+Each group is configured with min/max delta parameters, as well as a logic gate determining its output rate behavior. Deltas are counters of sched ticks invoked through the `run()` port. Min Delta is the least number of `Run()` invocations between successive packets before a packet with an updated channel is allowed to be sent. Updated packets will not be sent until their counter reaches Min Delta. This mitigates against telemetry spam while allowing users to benefit from asyncrhonously updating channels (e.g. those that don't occupy a set schedule). Max Delta is the maximum number of `Run()` invocations between successive packets. Upon reaching this counter, the packet would be sent, regardless of change.
 
 Each telemetry group per section is configured with a `RateLogic` parameter:
 * `SILENCED`: Packet will never be sent
@@ -78,7 +78,7 @@ Each telemetry group per section is configured with a `RateLogic` parameter:
 Groups are configured using the `SET_GROUP_DELTAS` command.
 
 #### 3.3.3 Switching Telemetry Sections
-`Svc::TlmPacketizer` also has a configurable constant `NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS` that allows separately streamed outputs of packets of the same group. This is useful for downstream components that would handle different telemetry groups at different rates. Examples of this configuration includes live telemetry throughput, detailed sim reconstruction, or critical data operations. 
+`Svc::TlmPacketizer` also has a configurable constant `NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS` that allows separately streamed outputs of packets of the same group. This is useful for downstream components that would handle different telemetry groups at different rates. Examples of this configuration includes live telemetry throughput, detailed sim reconstruction, or critical data operations.
 
 Telemetry sections are enabled and disabled upon spacecraft state transitions through `controlIn()` port invocations or via operator commands. A section and group pair must be both enabled to emit a telemetry packet.
 * `ENABLE_SECTION` / `controlIn()`: Enable / Disable telemetry sections.

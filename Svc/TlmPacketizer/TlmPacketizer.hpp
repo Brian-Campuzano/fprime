@@ -91,7 +91,8 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     //! Force a packet to be sent
     void SEND_PKT_cmdHandler(const FwOpcodeType opCode, /*!< The opcode*/
                              const U32 cmdSeq,          /*!< The command sequence number*/
-                             U32 id                     /*!< The packet ID*/
+                             U32 id,                    /*!< The packet ID*/
+                             FwIndexType section        /*!< Section to emit packet*/
                              ) override;
 
     //! Handler implementation for command ENABLE_SECTION
@@ -139,7 +140,6 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
         FwChanIdType id;       //!< channel id
         FwChanIdType level;    //!< channel level
         bool updated;          //!< if packet had any updates during last cycle
-        bool requested;        //!< if the packet was requested with SEND_PKT in the last cycle
     };
 
     // buffers for filling with telemetry
@@ -170,7 +170,6 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     FwChanIdType doHash(FwChanIdType id);
 
     Os::Mutex m_lock;        //!< used to lock access to packet buffers
-    Os::Mutex m_lock_param;  //!< used to lock access to parameters
 
     bool m_configured;  //!< indicates a table has been passed and packets configured
 
@@ -183,9 +182,8 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
 
     TlmEntry* findBucket(FwChanIdType id);
 
-    FwChanIdType m_startLevel;  //!< initial level for sending packets
-    FwChanIdType m_maxLevel;    //!< maximum level in all packets
-
+    Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
+    
     struct GroupConfig {
         Fw::Enabled enabled = Fw::Enabled::ENABLED;
         Fw::Enabled forceEnabled = Fw::Enabled::DISABLED;
@@ -194,16 +192,15 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
         U32 max = 0;  //!< Default for Backwards Compatible Behavior
     } m_groupConfigs[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1]{};
 
-    Fw::Enabled m_sectionEnabled[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS]{};
-
     enum UpdateFlag : U8 {
         NEVER_UPDATED = 0,
         PAST = 1,
         NEW = 2,
+        REQUESTED = 3,
     };
 
     struct PktSendCounters {
-        U32 prevSentCounter = 0xFFFFFFFF;
+        U32 prevSentCounter = 0xFFFFFFFF; // Prevent Start up spam
         UpdateFlag updateFlag = UpdateFlag::NEVER_UPDATED;
     } m_packetFlags[NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS][MAX_PACKETIZER_PACKETS]{};
 };
