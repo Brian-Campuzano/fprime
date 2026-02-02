@@ -39,6 +39,7 @@ bibtex
 Bies
 binaryfile
 BINDIR
+bitfield
 bitmaps
 bitshifts
 bitwidth
