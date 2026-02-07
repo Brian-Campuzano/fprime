@@ -712,7 +712,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     ASSERT_from_PktSend_SIZE(0);
 
     // send command to manually send a packet
-    this->sendCmd_SEND_PKT(0, 12, 4, 0);
+    this->sendCmd_SEND_PKT(0, 12, 4, TelemetrySection::PRIMARY);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketSent(0, 4);
@@ -735,7 +735,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
 
     // send command to manually send a packet
     this->clearHistory();
-    this->sendCmd_SEND_PKT(0, 12, 8, 0);
+    this->sendCmd_SEND_PKT(0, 12, 8, TelemetrySection::PRIMARY);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketSent(0, 8);
@@ -751,7 +751,7 @@ void TlmPacketizerTester ::sendManualPacketTest() {
     // Try to send invalid packet
     // send command to manually send a packet
     this->clearHistory();
-    this->sendCmd_SEND_PKT(0, 12, 20, 0);
+    this->sendCmd_SEND_PKT(0, 12, 20, TelemetrySection::PRIMARY);
     this->component.doDispatch();
     ASSERT_EVENTS_SIZE(1);
     ASSERT_EVENTS_PacketNotFound(0, 20);
@@ -958,33 +958,33 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->component.doDispatch();
 
     // Group 1
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 3, 3);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 3, 3);
     this->component.doDispatch();
 
     // Send every 5 on port 1
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
     this->component.doDispatch();
 
     this->clearHistory();
 
     // Group 2
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 4, 12);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 4, 12);
     this->component.doDispatch();
 
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
     this->component.doDispatch();
 
     this->clearHistory();
 
     // Group 3
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 1, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 0, 7);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 0, 7);
     this->component.doDispatch();
 
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
     this->component.doDispatch();
 
     // Disable output on section 2 via port invocation
-    this->invoke_to_controlIn(0, 2, Fw::Enabled::DISABLED);
+    this->invoke_to_controlIn(0, TelemetrySection::TERTIARY, Fw::Enabled::DISABLED);
     this->component.doDispatch();
 
     this->clearHistory();
@@ -1426,7 +1426,7 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Send a packet every time the port is invoked.
-    this->sendCmd_SET_GROUP_DELTAS(0, 0, 0, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 0);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 0);
     this->component.doDispatch();
 
     this->clearHistory();
@@ -1440,7 +1440,7 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Disable this group on section 0 (primary)
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->sendCmd_ENABLE_GROUP(0, 0, TelemetrySection::PRIMARY, 1, Fw::Enabled::DISABLED);
     this->component.doDispatch();
     // Expect No Packets
     this->invoke_to_Run(0, 0);
@@ -1449,9 +1449,9 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     ASSERT_from_PktSend_SIZE(0);
 
     // Enable group on section, but disable section
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
+    this->sendCmd_ENABLE_GROUP(0, 0, TelemetrySection::PRIMARY, 1, Fw::Enabled::ENABLED);
     this->component.doDispatch();
-    this->sendCmd_ENABLE_SECTION(0, 0, 0, Fw::Enabled::DISABLED);
+    this->sendCmd_ENABLE_SECTION(0, 0, TelemetrySection::PRIMARY, Fw::Enabled::DISABLED);
     this->component.doDispatch();
     // Expect No Packets
     this->invoke_to_Run(0, 0);
@@ -1460,9 +1460,9 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     ASSERT_from_PktSend_SIZE(0);
 
     // Enable Section by Port Invocation
-    this->sendCmd_ENABLE_SECTION(0, 0, 0, Fw::Enabled::ENABLED);
+    this->sendCmd_ENABLE_SECTION(0, 0, TelemetrySection::PRIMARY, Fw::Enabled::ENABLED);
     this->component.doDispatch();
-    this->invoke_to_controlIn(0, 0, Fw::Enabled::ENABLED);
+    this->invoke_to_controlIn(0, TelemetrySection::PRIMARY, Fw::Enabled::ENABLED);
     this->component.doDispatch();
     // Expect A Packet
     this->invoke_to_Run(0, 0);
@@ -1472,9 +1472,9 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Disable section by port invocation, but Send Command Force Section
-    this->invoke_to_controlIn(0, 0, Fw::Enabled::DISABLED);
+    this->invoke_to_controlIn(0, TelemetrySection::PRIMARY, Fw::Enabled::DISABLED);
     this->component.doDispatch();
-    this->sendCmd_FORCE_GROUP(0, 0, 0, 1, Fw::Enabled::ENABLED);
+    this->sendCmd_FORCE_GROUP(0, 0, TelemetrySection::PRIMARY, 1, Fw::Enabled::ENABLED);
     this->component.doDispatch();
     // Expect A Packet
     this->invoke_to_Run(0, 0);
@@ -1484,7 +1484,7 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Disable group, but keep force group command active
-    this->sendCmd_ENABLE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->sendCmd_ENABLE_GROUP(0, 0, TelemetrySection::PRIMARY, 1, Fw::Enabled::DISABLED);
     this->component.doDispatch();
     // Expect A Packet
     this->invoke_to_Run(0, 0);
@@ -1494,7 +1494,7 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Disable Force Group, with Group Disabled and Section Disabled
-    this->sendCmd_FORCE_GROUP(0, 0, 0, 1, Fw::Enabled::DISABLED);
+    this->sendCmd_FORCE_GROUP(0, 0, TelemetrySection::PRIMARY, 1, Fw::Enabled::DISABLED);
     this->component.doDispatch();
     // Expect No Packets
     this->invoke_to_Run(0, 0);
@@ -1567,7 +1567,7 @@ void TlmPacketizerTester ::connectPorts() {
     this->connect_to_TlmGet(0, this->component.get_TlmGet_InputPort(0));
 
     for (FwIndexType index = 0;
-         index < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
+         index < TelemetrySection::NUM_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
         this->component.set_PktSend_OutputPort(index, this->get_from_PktSend(index));
     }
 
@@ -1591,7 +1591,7 @@ void TlmPacketizerTester ::initComponents() {
 }
 
 void TlmPacketizerTester ::resetCounter(void) {
-    for (FwIndexType section = 0; section < NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS; section++) {
+    for (FwIndexType section = 0; section < TelemetrySection::NUM_SECTIONS; section++) {
         for (FwChanIdType group = 0; group < MAX_CONFIGURABLE_TLMPACKETIZER_GROUP; group++) {
             this->m_portOutInvokes[section][group] = 0;
         };

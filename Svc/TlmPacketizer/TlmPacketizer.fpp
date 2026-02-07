@@ -1,7 +1,7 @@
 module Svc {
   port EnableSection (
-      section: FwIndexType @< Section to enable (Primary, Secondary, etc...)
-      enabled: Fw.Enabled @< Enable / Disable Section
+      section: TelemetrySection @< Section to enable (Primary, Secondary, etc...)
+      enabled: Fw.Enabled       @< Enable / Disable Section
   )
   @ A component for storing telemetry
   active component TlmPacketizer {
@@ -10,10 +10,10 @@ module Svc {
     # ----------------------------------------------------------------------
     
     enum RateLogic {
-      SILENCED,
-      EVERY_MAX,
-      ON_CHANGE_MIN,
-      ON_CHANGE_MIN_OR_EVERY_MAX,
+      SILENCED,                     @< No logic applied. Does not send group and freezes counter.
+      EVERY_MAX,                    @< Send every MAX ticks between sends.
+      ON_CHANGE_MIN,                @< Send on updates after MIN ticks since last send.
+      ON_CHANGE_MIN_OR_EVERY_MAX,   @< Send on updates after MIN ticks since last send OR at MAX ticks between sends.
     }
     
     struct GroupConfig {
@@ -31,15 +31,16 @@ module Svc {
     }
 
     array GroupConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] GroupConfig
-    array SectionConfigs = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] GroupConfigs
-    array SectionEnabled = [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS] Fw.Enabled default Fw.Enabled.ENABLED
+    array SectionConfigs = [TelemetrySection.NUM_SECTIONS] GroupConfigs
+    array SectionEnabled = [TelemetrySection.NUM_SECTIONS] Fw.Enabled default Fw.Enabled.ENABLED
 
     # ----------------------------------------------------------------------
     # General ports
     # ----------------------------------------------------------------------
 
     @ Packet send port
-    output port PktSend: [NUM_CONFIGURABLE_TLMPACKETIZER_SECTIONS * NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] Fw.Com
+    @ Ordered by Section, Group
+    output port PktSend: [TelemetrySection.NUM_SECTIONS * NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS] Fw.Com
 
     async input port controlIn: EnableSection
 
@@ -95,42 +96,42 @@ module Svc {
 
     @ Force a packet to be sent
     async command SEND_PKT(
-                            $id: U32              @< The packet ID
-                            section: FwIndexType  @< Section to emit packet
+                            $id: U32                    @< The packet ID
+                            section: TelemetrySection   @< Section to emit packet
                           ) \
       opcode 1
 
     @ Enable / disable telemetry of a group on a section
     async command ENABLE_SECTION(
-                                section: FwIndexType    @< Section grouping to configure
-                                enable: Fw.Enabled      @< Section enabled or disabled
+                                section: TelemetrySection   @< Section grouping to configure
+                                enable: Fw.Enabled          @< Section enabled or disabled
                               ) \
       opcode 2
 
-        @ Enable / disable telemetry of a group on a section
+    @ Enable / disable telemetry of a group on a section
     async command ENABLE_GROUP(
-                                section: FwIndexType    @< Section grouping to configure
-                                tlmGroup: FwChanIdType  @< Group Identifier
-                                enable: Fw.Enabled      @< Section enabled or disabled
+                                section: TelemetrySection   @< Section grouping to configure
+                                tlmGroup: FwChanIdType      @< Group Identifier
+                                enable: Fw.Enabled          @< Section enabled or disabled
                               ) \
       opcode 3
     
     @ Force telemetering a group on a section, even if disabled
     async command FORCE_GROUP(
-                                    section: FwIndexType    @< Section grouping
-                                    tlmGroup: FwChanIdType  @< Group Identifier
-                                    enable: Fw.Enabled      @< Section enabled or disabled
+                                    section: TelemetrySection   @< Section grouping
+                                    tlmGroup: FwChanIdType      @< Group Identifier
+                                    enable: Fw.Enabled          @< Section enabled or disabled
                                   ) \
       opcode 4
 
     @ Set Min and Max Deltas between successive packets
-    async command SET_GROUP_DELTAS(
-                                    section: FwIndexType    @< Section grouping
-                                    tlmGroup: FwChanIdType  @< Group Identifier
-                                    rateLogic: RateLogic    @< Rate Logic
-                                    minDelta: U32           @< Minimum Sched Ticks to send packets on updates
-                                    maxDelta: U32           @< Maximum Sched Ticks to send packets
-                                  ) \
+    async command CONFIGURE_GROUP_RATES(
+                                        section: TelemetrySection   @< Section grouping
+                                        tlmGroup: FwChanIdType      @< Group Identifier
+                                        rateLogic: RateLogic        @< Rate Logic
+                                        minDelta: U32               @< Minimum Sched Ticks to send packets on updates when using ON_CHANGE logic
+                                        maxDelta: U32               @< Maximum Sched Ticks between packets to send when using EVERY_MAX logic
+                                      ) \
       opcode 5
 
     
@@ -181,8 +182,8 @@ module Svc {
       format "Could not find packet ID {}"
 
     event SectionUnconfigurable(
-                                section: FwIndexType @< The Section
-                                enable: Fw.Enabled @< Attempted Configuration
+                                section: TelemetrySection @< The Section
+                                enable: Fw.Enabled        @< Attempted Configuration
                                ) \
       severity warning low \
       id 5 \
