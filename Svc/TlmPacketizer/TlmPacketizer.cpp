@@ -545,7 +545,7 @@ void TlmPacketizer ::ENABLE_SECTION_cmdHandler(FwOpcodeType opCode,
         this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::VALIDATION_ERROR);
         return;
     }
-    this->m_sectionEnabled[section] = enable;
+    (void)(this->m_sectionEnabled[section] = enable);
     this->tlmWrite_SectionEnabled(this->m_sectionEnabled);
     this->cmdResponse_out(opCode, cmdSeq, Fw::CmdResponse::OK);
 }

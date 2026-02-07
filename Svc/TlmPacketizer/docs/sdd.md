@@ -85,7 +85,7 @@ Telemetry sections are enabled and disabled upon spacecraft state transitions th
 * `ENABLE_GROUP`: Within a section, Enable / Disable a telemetry group.
 * `FORCE_GROUP`: If set to Enabled, telemetry of the chosen group in a section will be emitted regardless if the section or group within the section is disabled.
 
-Disabling gropus / sections will freeze the group's counter between sent output.
+Disabling groups / sections will freeze the group's counter between sent output.
 Updated groups using `ON_CHANGE_MIN` or `ON_CHANGE_MIN_OR_EVERY_MAX` while group disabled / section disabled will be marked "NEW" but not sent. The group counter resumes once the group / section is re-enabled and will be sent upon reaching their MIN counter.
 
 ### 3.4 State
