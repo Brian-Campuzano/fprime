@@ -47,6 +47,10 @@ Telemetry Packets: A group of telemetry channels.
 Telemetry Group / Level: An identifier for a telemetry packet used to determine which packets get transmitted.
 Telemetry Section: A resampling of telemetry groups. Each Section typically is destined for a different destination (e.g. realtime downlink vs store & forward)
 
+The following example demonstrates the structure composition of packet set specifications and packet sections used in `Svc::TlmPacketizer`. While multiple packet sets can have packets with different group identifiers, a section contains all packets partitioned based on group identifier.
+
+![Packet section structure composition](img/TlmPacketizerPacketStructureComposition.png "Section structure composition")
+
 #### 3.2 Functional Description
 
 The `Svc::TlmPacketizer` component has an input port `TlmRecv` that receives channel updates from other components in the system. These calls from the other components are made by the component implementation classes, but the generated code in the base classes takes the type specific channel value and serializes it, then makes the call to the output port. The `Svc::TlmPacketizer` component can then store the channel value as generic data. The channel ID is used to look up offsets for the channel in each of the defined packets. A channel can be defined in more than one packet. The time tag is stripped from the incoming telemetry value. The time tag of the channel will become the time tag of the entire frame when it is sent.
@@ -74,6 +78,8 @@ Each telemetry group per section is configured with a `RateLogic` parameter:
 * `EVERY_MAX`: Packet will be sent every Max Delta intervals
 * `ON_CHANGE_MIN`: Packet will only be sent on updates at at least Min Delta intervals.
 * `ON_CHANGE_MIN_OR_EVERY_MAX`: Packet will be sent on updates at at least Min Delta intervals, or at most Max Delta intervals.
+
+Note: `MAX` will take priority over `MIN` if less than `MIN` and the telemetry group is set to `ON_CHANGE_MIN_OR_EVERY_MAX`. 
 
 Groups are configured using the `CONFIGURE_GROUP_RATES` command.
 
