@@ -33,9 +33,10 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     );
 
     void setPacketList(
-        const TlmPacketizerPacketList& packetList,   // channels to packetize
-        const Svc::TlmPacketizerPacket& ignoreList,  // channels to ignore (i.e. no warning event if not packetized)
-        const FwChanIdType startLevel);              // starting level of packets to send
+        const TlmPacketizerPacketList& packetList,              // channels to packetize
+        const Svc::TlmPacketizerPacket& ignoreList,             // channels to ignore (i.e. no warning event if not packetized)
+        const FwChanIdType startLevel,                          // starting level of packets to send
+        const TlmPacketizer_GroupConfig& defaultGroupConfig = TlmPacketizer_GroupConfig{});   // default group config setting         
 
     //! Destroy object TlmPacketizer
     //!
@@ -81,7 +82,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                                 ) override;
 
     //! Implementation for SET_LEVEL command handler
-    //! Set telemetry send leve
+    //! Set telemetry send level
     void SET_LEVEL_cmdHandler(FwOpcodeType opCode,  //!< The opcode
                               U32 cmdSeq,           //!< The command sequence number
                               FwChanIdType level    //!< The I32 command argument
@@ -158,7 +159,7 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
         FwSizeType channelSize;  //!< max serialized size of the channel in bytes
         TlmEntry* next;          //!< pointer to next bucket in table
         bool used;               //!< if entry has been used
-        bool ignored;            //!< ignored packet id
+        bool ignored;            //!< ignored channel id
         bool hasValue;           //!< if the entry has received a value at least once
         FwChanIdType bucketNo;   //!< for testing
     };
@@ -190,10 +191,10 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     TlmPacketizer_SectionConfigs m_groupConfigs{};
 
     enum UpdateFlag : U8 {
-        NEVER_UPDATED = 0,
-        PAST = 1,
-        NEW = 2,
-        REQUESTED = 3,
+        NEVER_UPDATED = 0,  // Packet has never been updated (NO DATA)
+        PAST = 1,           // Packet has been sent and has old data
+        NEW = 2,            // Packet has been updated - use for ON_CHANGE_MIN logic
+        REQUESTED = 3,      // Packet has been requested - bypass all rate and enabled checks
     };
 
     struct PktSendCounters {

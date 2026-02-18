@@ -50,13 +50,16 @@ TlmPacketizer ::TlmPacketizer(const char* const compName)
     for (FwIndexType section = 0; section < TelemetrySection::NUM_SECTIONS; section++) {
         (void)(this->m_sectionEnabled[section] = Fw::Enabled::ENABLED);
     }
+
+    static_assert(NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS == MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1, "NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS MUST BE MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1");
 }
 
 TlmPacketizer ::~TlmPacketizer() {}
 
 void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
                                   const Svc::TlmPacketizerPacket& ignoreList,
-                                  const FwChanIdType startLevel) {
+                                  const FwChanIdType startLevel,
+                                  const TlmPacketizer_GroupConfig& defaultGroupConfig) {
     FW_ASSERT(packetList.list);
     FW_ASSERT(ignoreList.list);
     FW_ASSERT(packetList.numEntries <= MAX_PACKETIZER_PACKETS, static_cast<FwAssertArgType>(packetList.numEntries));
@@ -117,29 +120,10 @@ void TlmPacketizer::setPacketList(const TlmPacketizerPacketList& packetList,
 
     // Enable and set group configurations
     for (FwIndexType section = 0; section < TelemetrySection::NUM_SECTIONS; section++) {
-        TlmPacketizer_RateLogic startRateLogic;
-        switch (PACKET_UPDATE_MODE) {
-            case PACKET_UPDATE_ON_CHANGE:
-                (void)(startRateLogic = TlmPacketizer_RateLogic::ON_CHANGE_MIN);
-                break;
-            case PACKET_UPDATE_ALWAYS:
-                for (FwChanIdType pkt = 0; pkt < MAX_PACKETIZER_PACKETS; pkt++) {
-                    // Trigger sending packets even if they're empty.
-                    (void)(this->m_packetFlags[section][pkt].updateFlag = UpdateFlag::PAST);
-                }
-                (void)(startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX);
-                break;
-            case PACKET_UPDATE_AFTER_FIRST_CHANGE:
-                (void)(startRateLogic = TlmPacketizer_RateLogic::EVERY_MAX);
-                break;
-            default:
-                FW_ASSERT(0, PACKET_UPDATE_MODE);
-                break;
-        }
         for (FwChanIdType group = 0; group < NUM_CONFIGURABLE_TLMPACKETIZER_GROUPS; group++) {
             Fw::Enabled groupEnabled = group <= startLevel ? Fw::Enabled::ENABLED : Fw::Enabled::DISABLED;
+            this->m_groupConfigs[section][group] = defaultGroupConfig;
             this->m_groupConfigs[section][group].set_enabled(groupEnabled);
-            this->m_groupConfigs[section][group].set_rateLogic(startRateLogic);
         }
     }
 
@@ -360,12 +344,14 @@ Fw::TlmValid TlmPacketizer ::TlmGet_handler(FwIndexType portNum,  //!< The port 
 void TlmPacketizer ::Run_handler(const FwIndexType portNum, U32 context) {
     FW_ASSERT(this->m_configured);
 
-    // lock mutex long enough to modify active telemetry buffer
+    // lock mutex long enough to copy fill buffers to send buffers
     // so the data can be read without worrying about updates
     this->m_lock.lock();
     // copy buffers from fill side to send side
     for (FwChanIdType pkt = 0; pkt < this->m_numPackets; pkt++) {
-        (void)(this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt]);
+        if (this->m_fillBuffers[pkt].updated == true){
+            (void)(this->m_sendBuffers[pkt] = this->m_fillBuffers[pkt]);
+        }
         this->m_fillBuffers[pkt].updated = false;
     }
     this->m_lock.unLock();

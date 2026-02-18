@@ -1,8 +1,4 @@
 module Svc {
-  port EnableSection (
-      section: TelemetrySection @< Section to enable (Primary, Secondary, etc...)
-      enabled: Fw.Enabled       @< Enable / Disable Section
-  )
   @ A component for storing telemetry
   active component TlmPacketizer {
     # ----------------------------------------------------------------------
@@ -20,8 +16,8 @@ module Svc {
       enabled: Fw.Enabled       @< Enable / Disable Telemetry Output
       forceEnabled: Fw.Enabled  @< Force Enable / Disable Telemetry Output
       rateLogic: RateLogic      @< Rate Logic Configuration
-      min: U32                  @< Minimum Sched Ticks 
-      max: U32                  @< Maximum Sched Ticks
+      min: U32                  @< Minimum Sched Ticks when in ON_CHANGE_MIN
+      max: U32                  @< Maximum Sched Ticks when in EVERY_MAX
     } default {
       enabled = Fw.Enabled.ENABLED
       forceEnabled = Fw.Enabled.DISABLED
