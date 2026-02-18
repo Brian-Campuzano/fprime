@@ -958,29 +958,35 @@ void TlmPacketizerTester ::configuredTelemetryGroupsTests(void) {
     this->component.doDispatch();
 
     // Group 1
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 3, 3);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN,
+                                        3, 3);
     this->component.doDispatch();
 
     // Send every 5 on port 1
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 1, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 1,
+                                        Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN, 2, 2);
     this->component.doDispatch();
 
     this->clearHistory();
 
     // Group 2
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 2, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 4, 12);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 2,
+                                        Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 4, 12);
     this->component.doDispatch();
 
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0, 0);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 2, Svc::TlmPacketizer_RateLogic::SILENCED, 0,
+                                        0);
     this->component.doDispatch();
 
     this->clearHistory();
 
     // Group 3
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 3, Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 0, 7);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::SECONDARY, 3,
+                                        Svc::TlmPacketizer_RateLogic::ON_CHANGE_MIN_OR_EVERY_MAX, 0, 7);
     this->component.doDispatch();
 
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 6);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 3, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0,
+                                        6);
     this->component.doDispatch();
 
     // Disable output on section 2 via port invocation
@@ -1426,7 +1432,8 @@ void TlmPacketizerTester ::advancedControlGroupTests(void) {
     this->clearHistory();
 
     // Send a packet every time the port is invoked.
-    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0, 0);
+    this->sendCmd_CONFIGURE_GROUP_RATES(0, 0, TelemetrySection::PRIMARY, 1, Svc::TlmPacketizer_RateLogic::EVERY_MAX, 0,
+                                        0);
     this->component.doDispatch();
 
     this->clearHistory();
@@ -1566,8 +1573,8 @@ void TlmPacketizerTester ::connectPorts() {
     // TlmGet
     this->connect_to_TlmGet(0, this->component.get_TlmGet_InputPort(0));
 
-    for (FwIndexType index = 0;
-         index < TelemetrySection::NUM_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1); index++) {
+    for (FwIndexType index = 0; index < TelemetrySection::NUM_SECTIONS * (MAX_CONFIGURABLE_TLMPACKETIZER_GROUP + 1);
+         index++) {
         this->component.set_PktSend_OutputPort(index, this->get_from_PktSend(index));
     }
 

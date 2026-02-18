@@ -33,10 +33,11 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
     );
 
     void setPacketList(
-        const TlmPacketizerPacketList& packetList,              // channels to packetize
-        const Svc::TlmPacketizerPacket& ignoreList,             // channels to ignore (i.e. no warning event if not packetized)
-        const FwChanIdType startLevel,                          // starting level of packets to send
-        const TlmPacketizer_GroupConfig& defaultGroupConfig = TlmPacketizer_GroupConfig{});   // default group config setting         
+        const TlmPacketizerPacketList& packetList,   // channels to packetize
+        const Svc::TlmPacketizerPacket& ignoreList,  // channels to ignore (i.e. no warning event if not packetized)
+        const FwChanIdType startLevel,               // starting level of packets to send
+        const TlmPacketizer_GroupConfig& defaultGroupConfig =
+            TlmPacketizer_GroupConfig{});  // default group config setting
 
     //! Destroy object TlmPacketizer
     //!
@@ -112,7 +113,6 @@ class TlmPacketizer final : public TlmPacketizerComponentBase {
                                  FwChanIdType tlmGroup,          //!< Group Identifier
                                  Fw::Enabled enable              //!< Section enabled or disabled
                                  ) override;
-
 
     //! Handler implementation for command FORCE_GROUP
     void FORCE_GROUP_cmdHandler(FwOpcodeType opCode,            //!< The opcode
