@@ -43,3 +43,8 @@ async command SetChannelFlow(
     channelId: U8 @< Channel ID to set
     freeze: Cfdp.Flow @< Flow state to set
 )
+
+@ Command to reset telemetry counters
+async command ResetCounters(
+    channelId: U8 @< Channel ID to reset (0xFF for all channels)
+)

@@ -482,3 +482,9 @@ event FileRemoveFailed(
 ) \
     severity warning low \
     format "Failed to remove file {}, error={}"
+
+event ResetCounters(
+    channelId: U8 @< Channel ID reset (0xFF indicates all channels)
+) \
+    severity activity high \
+    format "Reset telemetry counters for channel {}"
